@@ -1,0 +1,34 @@
+<section class="sites">
+  <app-breadcrumbs
+    [breadcrumbs]="breadcrumbs()"
+    [currentSiteId]="currentSiteId()"
+    (breadcrumbClick)="onBreadcrumbClick($event)"
+  />
+
+  @if (loading()) {
+    <h1 class="sites__status">Loading sites…</h1>
+  } @else if (error()) {
+    <h1 class="sites__status sites__status--error">{{ error() }}</h1>
+  } @else if (!sites().length) {
+    <h1 class="sites__status">No sites found at this level.</h1>
+  } @else {
+    <div class="sites__grid">
+      @for (site of sites(); track site.id) {
+        <app-site-card
+          [site]="site"
+          (navigate)="onNavigateToSite($event)"
+        />
+      }
+    </div>    
+
+    @if (totalPages() > 1) {
+      <app-pagination
+        [currentPage]="currentPage()"
+        [pageSize]="pageSize"
+        [totalPages]="totalPages()"
+        [totalItems]="totalItems()"
+        (pageChange)="onPageChange($event)"
+      />
+    }
+  }
+</section>
