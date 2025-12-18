@@ -9,6 +9,7 @@ export interface Site {
     path: string;
     integrationCode: string;
     isLeaf: boolean;
+    childrenCount: number;
     children?: Site[];
     pricePerHour?: number;
     numberOfSlots?: number;
