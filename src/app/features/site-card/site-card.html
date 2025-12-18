@@ -1,0 +1,22 @@
+<div class="site-card" (dblclick)="onCardDoubleClick()">
+  <div class="site-card__icon" [class.site-card__icon--leaf]="site().isLeaf">
+    <img
+      [src]="
+        site().isLeaf ? 'assets/icons/leaf-site-logo.svg' : 'assets/icons/non-leaf-site-logo.svg'
+      "
+      alt="Site Logo"
+    />
+  </div>
+
+  <h3 class="site-card__title">{{ site().name.en }}</h3>
+
+  <div class="site-card__name site-card__name--ar">{{ site().name.ar }}</div>
+
+  <div class="site-card__code">Integration Code: {{ site().integrationCode }}</div>
+
+  @if (site().isLeaf) {
+  <p class="site-card__badge site-card__badge--leaf">Parking Area</p>
+  } @else {
+  <p class="site-card__badge">{{ subsiteCount }} subsites</p>
+  }
+</div>
