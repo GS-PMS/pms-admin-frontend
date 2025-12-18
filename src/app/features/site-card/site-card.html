@@ -17,6 +17,6 @@
   @if (site().isLeaf) {
   <p class="site-card__badge site-card__badge--leaf">Parking Area</p>
   } @else {
-  <p class="site-card__badge">{{ subsiteCount }} subsites</p>
+  <p class="site-card__badge">{{ site().childrenCount }} subsites</p>
   }
 </div>
