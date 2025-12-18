@@ -1,0 +1,43 @@
+<nav class="pagination">
+  <div class="pagination__info">
+    Showing {{ startItem() }} - {{ endItem() }} of {{ totalItems() }}
+  </div>
+
+  <div class="pagination__controls">
+    <button
+      type="button"
+      class="pagination__btn"
+      [disabled]="currentPage() === 1"
+      (click)="onPageChange(currentPage() - 1)"
+    >
+      Previous
+    </button>
+
+    <div class="pagination__pages">
+      @for (pageNum of pageNumbers(); track pageNum) {
+        @if (pageNum === -1) {
+          <span class="pagination__ellipsis">…</span>
+        } @else {
+          <button
+            type="button"
+            class="pagination__btn pagination__btn--page"
+            [class.pagination__btn--active]="pageNum === currentPage()"
+            (click)="onPageChange(pageNum)"
+          >
+            {{ pageNum }}
+          </button>
+        }
+      }
+    </div>
+
+    <button
+      type="button"
+      class="pagination__btn"
+      [disabled]="currentPage() === totalPages()"
+      (click)="onPageChange(currentPage() + 1)"
+    >
+      Next
+    </button>
+  </div>
+</nav>
+
