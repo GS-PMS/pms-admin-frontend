@@ -1,52 +1,50 @@
-
 pipeline {
     agent any
 
     environment {
-        // Docker Hub credentials
         DOCKER_HUB_REPO = 'salmawaleedd'
         SERVICE_NAME = 'pms-admin-frontend'
         IMAGE_TAG = "${BUILD_NUMBER}"
-
+    }
 
     stages {
-
         stage('🚨 Validate Push Method') {
-                    when {
-                        branch 'main'
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    if (!env.CHANGE_ID) {
+                        def committer = sh(
+                            script: 'git log -1 --pretty=format:"%an"',
+                            returnStdout: true
+                        ).trim()
+
+                        error("""
+                        ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
+
+                        Committer: ${committer}
+
+                        ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
+
+                        Required workflow:
+                        1. git checkout -b feature/your-feature
+                        2. Make changes and commit
+                        3. git push origin feature/your-feature
+                        4. Create Pull Request on GitHub
+                        5. Get code review approval
+                        6. Merge via Pull Request
+
+                        Your code reached main but won't be deployed.
+                        Revert with: git revert HEAD
+                        """)
+                    } else {
+                        echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
                     }
-                    steps {
-                        script {
-                            if (!env.CHANGE_ID) {
-                                def committer = sh(
-                                    script: 'git log -1 --pretty=format:"%an"',
-                                    returnStdout: true
-                                ).trim()
-
-                                error("""
-                                ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
-
-                                Committer: ${committer}
-
-                                ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
-
-                                Required workflow:
-                                1. git checkout -b feature/your-feature
-                                2. Make changes and commit
-                                3. git push origin feature/your-feature
-                                4. Create Pull Request on GitHub
-                                5. Get code review approval
-                                6. Merge via Pull Request
-
-                                Your code reached main but won't be deployed.
-                                Revert with: git revert HEAD
-                                """)
-                            } else {
-                                echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
-                            }
-                        }
-                    }
+                }
+            }
         }
+
         stage('Checkout Code') {
             steps {
                 echo "=== Checking out ${SERVICE_NAME} ==="
@@ -89,14 +87,12 @@ pipeline {
                         usernameVariable: 'DOCKER_USER',
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
-                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                        sh """
+                            echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                            docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
+                            docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
+                        """
                     }
-
-                    // Push both tags
-                    sh """
-                        docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
-                        docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                    """
                 }
             }
         }
@@ -105,8 +101,8 @@ pipeline {
     post {
         always {
             echo "=== Cleaning up ==="
-            sh 'docker logout'  // Safe logout
-            sh 'docker image prune -f'  // Remove dangling images
+            sh 'docker logout'
+            sh 'docker image prune -f'
         }
 
         success {
