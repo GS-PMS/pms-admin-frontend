@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { Site } from '../models/site';
 import { PaginatedResponse } from '../models/PaginatedResponse';
 import { Breadcrumb } from '../models/Breadcrumb';
+import { CreateSiteDto } from '../models/CreateSiteDto';
 import { environment } from '../../environments/environment';
 
 const DEFAULT_PAGE = 1;
@@ -35,6 +36,10 @@ export class SiteService {
 
   getSiteAncestorsIds(siteId: string): Observable<Breadcrumb[]> {
     return this.http.get<Breadcrumb[]>(`${this.baseUrl}/${siteId}/ancestors`);
+  }
+
+  createSite(siteData: CreateSiteDto): Observable<Site> {
+    return this.http.post<Site>(this.baseUrl, siteData);
   }
 }
 
