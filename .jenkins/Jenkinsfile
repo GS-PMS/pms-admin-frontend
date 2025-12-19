@@ -12,42 +12,40 @@ pipeline {
     stages {
 
         stage('🚨 Validate Push Method') {
-            when {
-                branch 'main'
-            }
-            steps {
-                script {
-                    // DIRECT CHECK: No CHANGE_ID means direct push
-                    if (!env.CHANGE_ID) {
-                        // Get committer name
-                        def committer = sh(
-                            script: 'git log -1 --pretty=format:"%an"',
-                            returnStdout: true
-                        ).trim()
-
-                        error("""
-                        ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
-
-                        Committer: ${committer}
-
-                        ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
-
-                        Required workflow:
-                        1. git checkout -b feature/your-feature
-                        2. Make changes and commit
-                        3. git push origin feature/your-feature
-                        4. Create Pull Request on GitHub
-                        5. Get code review approval
-                        6. Merge via Pull Request
-
-                        Your code reached main but won't be deployed.
-                        Revert with: git revert HEAD
-                        """)
-                    } else {
-                        echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
+                    when {
+                        branch 'main'
                     }
-                }
-            }
+                    steps {
+                        script {
+                            if (!env.CHANGE_ID) {
+                                def committer = sh(
+                                    script: 'git log -1 --pretty=format:"%an"',
+                                    returnStdout: true
+                                ).trim()
+
+                                error("""
+                                ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
+
+                                Committer: ${committer}
+
+                                ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
+
+                                Required workflow:
+                                1. git checkout -b feature/your-feature
+                                2. Make changes and commit
+                                3. git push origin feature/your-feature
+                                4. Create Pull Request on GitHub
+                                5. Get code review approval
+                                6. Merge via Pull Request
+
+                                Your code reached main but won't be deployed.
+                                Revert with: git revert HEAD
+                                """)
+                            } else {
+                                echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
+                            }
+                        }
+                    }
         }
         stage('Checkout Code') {
             steps {
