@@ -1,0 +1,84 @@
+
+pipeline {
+    agent any
+
+    environment {
+        // Docker Hub credentials
+        DOCKER_HUB_CREDENTIALS = credentials('dockerhub-credentials')
+        DOCKER_HUB_REPO = 'salmawaleedd'
+        SERVICE_NAME = 'pms-admin-frontend'
+        IMAGE_TAG = "${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo "=== Checking out ${SERVICE_NAME} ==="
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "=== Installing npm dependencies ==="
+                sh 'npm ci'
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                echo "=== Building ${SERVICE_NAME} ==="
+                sh 'npm run build'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    echo "=== Building Docker image ==="
+                    sh """
+                        docker build -t ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG} .
+                        docker tag ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
+                    """
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    echo "=== Pushing to Docker Hub ==="
+                    withCredentials([usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )]) {
+                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                    }
+
+                    // Push both tags
+                    sh """
+                        docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
+                        docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "=== Cleaning up ==="
+            sh 'docker logout'  // Safe logout
+            sh 'docker image prune -f'  // Remove dangling images
+        }
+
+        success {
+            echo "✅ ${SERVICE_NAME} pipeline completed successfully!"
+        }
+
+        failure {
+            echo "❌ ${SERVICE_NAME} pipeline failed!"
+        }
+    }
+}
