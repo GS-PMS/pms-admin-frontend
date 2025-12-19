@@ -8,13 +8,15 @@ pipeline {
         SERVICE_NAME = 'pms-admin-frontend'
         IMAGE_TAG = "${BUILD_NUMBER}"
        // Detect if this is from a PR or direct push
-         IS_PR = env.CHANGE_ID ? 'true' : 'false'
+        IS_PR = isPR()
 
-        // Get the committer
         COMMITTER = sh(
             script: 'git log -1 --pretty=format:"%an"',
             returnStdout: true
         ).trim()
+    }
+        def isPR() {
+            return env.CHANGE_ID ? 'true' : 'false'
     }
 
     stages {
