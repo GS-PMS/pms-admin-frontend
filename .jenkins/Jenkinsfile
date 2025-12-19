@@ -20,7 +20,11 @@ pipeline {
          }
         stage('🚨 Validate Push Method') {
             when {
-                branch 'main'
+                expression {
+                    // Check GIT_BRANCH which contains 'origin/main'
+                    def gitBranch = env.GIT_BRANCH ?: ''
+                    return gitBranch.contains('main') || gitBranch.contains('master')
+                }
             }
             steps {
                 script {
