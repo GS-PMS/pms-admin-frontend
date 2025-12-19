@@ -1,0 +1,98 @@
+<div class="site-form">
+  <h2>Add New Site</h2>
+
+  @if (successMessage()) {
+    <div class="success-box">
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="error-box">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <form [formGroup]="siteForm" (ngSubmit)="onSubmit()">
+    <div class="form-row">
+      <div class="form-field">
+        <label for="name-ar">Name (Arabic) *</label>
+        <input
+          id="name-ar"
+          type="text"
+          formControlName="nameAr"
+          placeholder="Enter Arabic name"
+        />
+        @if (siteForm.get('nameAr')?.invalid && siteForm.get('nameAr')?.touched) {
+          <span class="error">
+            @if (siteForm.get('nameAr')?.errors?.['required']) {
+              Arabic name is required
+            } @else if (siteForm.get('nameAr')?.errors?.['minlength']) {
+              Minimum 3 characters
+            } @else if (siteForm.get('nameAr')?.errors?.['maxlength']) {
+              Maximum 100 characters
+            }
+          </span>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="name-en">Name (English) *</label>
+        <input
+          id="name-en"
+          type="text"
+          formControlName="nameEn"
+          placeholder="Enter English name"
+        />
+        @if (siteForm.get('nameEn')?.invalid && siteForm.get('nameEn')?.touched) {
+          <span class="error">
+            @if (siteForm.get('nameEn')?.errors?.['required']) {
+              English name is required
+            } @else if (siteForm.get('nameEn')?.errors?.['minlength']) {
+              Minimum 3 characters
+            } @else if (siteForm.get('nameEn')?.errors?.['maxlength']) {
+              Maximum 100 characters
+            }
+          </span>
+        }
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="path">Path</label>
+      <input id="path" type="text" formControlName="path" readonly />
+      <small>Auto-detected from current location</small>
+    </div>
+
+    <div class="form-field">
+      <label for="integration-code">Integration Code *</label>
+      <input
+        id="integration-code"
+        type="text"
+        formControlName="integrationCode"
+        placeholder="Enter integration code"
+      />
+      @if (siteForm.get('integrationCode')?.invalid && siteForm.get('integrationCode')?.touched) {
+        <span class="error">Required</span>
+      }
+    </div>
+
+    <label class="checkbox-field">
+      <input type="checkbox" formControlName="isLeaf" />
+      <span>Is Leaf Site (Parking Area)</span>
+    </label>
+
+    <div class="form-actions">
+      <button type="button" class="btn-cancel" (click)="onCancel()" [disabled]="isSubmitting()">
+        Cancel
+      </button>
+      <button
+        type="submit"
+        class="btn-submit"
+        [disabled]="siteForm.invalid || isSubmitting()"
+      >
+        {{ isSubmitting() ? 'Creating...' : 'Create Site' }}
+      </button>
+    </div>
+  </form>
+</div>
