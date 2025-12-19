@@ -7,52 +7,48 @@ pipeline {
         DOCKER_HUB_REPO = 'salmawaleedd'
         SERVICE_NAME = 'pms-admin-frontend'
         IMAGE_TAG = "${BUILD_NUMBER}"
-       // Detect if this is from a PR or direct push
-        IS_PR = isPR()
 
-        COMMITTER = sh(
-            script: 'git log -1 --pretty=format:"%an"',
-            returnStdout: true
-        ).trim()
-    }
-        def isPR() {
-            return env.CHANGE_ID ? 'true' : 'false'
-    }
 
     stages {
 
-        stage('Validate Push Method') {
-                when {
-                    branch 'main'
-                }
-                steps {
-                    script {
-                        if (env.IS_PR == 'false') {
-                            currentBuild.result = 'FAILURE'
-                            error("""
-                            ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
+        stage('🚨 Validate Push Method') {
+            when {
+                branch 'main'
+            }
+            steps {
+                script {
+                    // DIRECT CHECK: No CHANGE_ID means direct push
+                    if (!env.CHANGE_ID) {
+                        // Get committer name
+                        def committer = sh(
+                            script: 'git log -1 --pretty=format:"%an"',
+                            returnStdout: true
+                        ).trim()
 
-                            Committer: ${env.COMMITTER}
+                        error("""
+                        ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
 
-                            ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
+                        Committer: ${committer}
 
-                            Required workflow:
-                            1. git checkout -b feature/your-feature
-                            2. Make changes and commit
-                            3. git push origin feature/your-feature
-                            4. Create Pull Request on GitHub
-                            5. Get code review approval
-                            6. Merge via Pull Request
+                        ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
 
-                            Your code reached main but won't be deployed.
-                            Revert with: git revert HEAD
-                            """)
-                        } else {
-                            echo "✅ Valid: This build is from Pull Request"
-                        }
+                        Required workflow:
+                        1. git checkout -b feature/your-feature
+                        2. Make changes and commit
+                        3. git push origin feature/your-feature
+                        4. Create Pull Request on GitHub
+                        5. Get code review approval
+                        6. Merge via Pull Request
+
+                        Your code reached main but won't be deployed.
+                        Revert with: git revert HEAD
+                        """)
+                    } else {
+                        echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
                     }
                 }
             }
+        }
         stage('Checkout Code') {
             steps {
                 echo "=== Checking out ${SERVICE_NAME} ==="
