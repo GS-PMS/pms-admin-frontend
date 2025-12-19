@@ -1,0 +1,26 @@
+@if (loading()) {
+  <h1 class="sites-grid__status">Loading sites…</h1>
+} @else if (error()) {
+  <h1 class="sites-grid__status sites-grid__status--error">{{ error() }}</h1>
+} @else if (!sites().length) {
+  <h1 class="sites-grid__status">No sites found at this level.</h1>
+} @else {
+  <div class="sites-grid__container">
+    @for (site of sites(); track site.id) {
+      <app-site-card
+        [site]="site"
+        (navigate)="onNavigateToSite($event)"
+      />
+    }
+  </div>
+
+  @if (totalPages() > 1) {
+    <app-pagination
+      [currentPage]="currentPage()"
+      [pageSize]="pageSize"
+      [totalPages]="totalPages()"
+      [totalItems]="totalItems()"
+      (pageChange)="onPageChange($event)"
+    />
+  }
+}
