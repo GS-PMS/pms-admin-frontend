@@ -8,10 +8,7 @@ pipeline {
         SERVICE_NAME = 'pms-admin-frontend'
         IMAGE_TAG = "${BUILD_NUMBER}"
        // Detect if this is from a PR or direct push
-        IS_PR = sh(
-            script: 'if [ -z "$CHANGE_ID" ]; then echo "false"; else echo "true"; fi',
-            returnStdout: true
-        ).trim()
+         IS_PR = env.CHANGE_ID ? 'true' : 'false'
 
         // Get the committer
         COMMITTER = sh(
