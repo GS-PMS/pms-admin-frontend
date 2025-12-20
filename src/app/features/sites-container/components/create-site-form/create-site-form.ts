@@ -1,8 +1,11 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { SiteService } from '../../../../shared/services/site.service';
 import { Site } from '../../../../shared/models/site';
+
+const ARABIC_REGEX = /^[\u0600-\u06FF\u0660-\u06690-9\s\-\_\.,!@#\$%\^&\*\(\)]+$/;
+const ENGLISH_REGEX = /^[a-zA-Z0-9\s\-\_\.,!@#\$%\^&\*\(\)]+$/;
 
 @Component({
   selector: 'app-create-site-form',
@@ -26,8 +29,8 @@ export class CreateSiteForm {
 
   constructor() {
     this.siteForm = this.fb.group({
-      nameAr: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      nameEn: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      nameAr: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), this.arabicOnlyValidator]],
+      nameEn: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100), this.englishOnlyValidator]],
       path: [{ value: '', disabled: true }],
       isLeaf: [false],
       integrationCode: ['', [Validators.required]],
@@ -37,6 +40,20 @@ export class CreateSiteForm {
       const currentPath = this.currentPath();
       this.siteForm.patchValue({ path: currentPath || '/' });
     });
+  }
+
+  private arabicOnlyValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null;
+    }
+    return ARABIC_REGEX.test(control.value) ? null : { arabicOnly: true };
+  }
+
+  private englishOnlyValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) {
+      return null;
+    }
+    return ENGLISH_REGEX.test(control.value) ? null : { englishOnly: true };
   }
 
   onSubmit(): void {
@@ -94,5 +111,17 @@ export class CreateSiteForm {
     });
     this.errorMessage.set(null);
     this.successMessage.set(null);
+  }
+
+  onArabicInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.replace(/[^\u0600-\u06FF\u0660-\u06690-9\s\-\_\.,!@#\$%\^&\*\(\)]/g, '');
+    this.siteForm.get('nameAr')?.setValue(input.value, { emitEvent: true });
+  }
+
+  onEnglishInput(event: Event, fieldName: string): void {
+    const input = event.target as HTMLInputElement;
+    input.value = input.value.replace(/[^a-zA-Z0-9\s\-\_\.,!@#\$%\^&\*\(\)]/g, '');
+    this.siteForm.get(fieldName)?.setValue(input.value, { emitEvent: true });
   }
 }
