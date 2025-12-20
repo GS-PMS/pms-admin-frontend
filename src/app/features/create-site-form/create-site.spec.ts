@@ -13,11 +13,10 @@ describe('CreateSiteForm', () => {
 
     fixture = TestBed.createComponent(CreateSiteForm);
     component = fixture.componentInstance;
-    fixture.detectChanges();
+    await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 });
-
