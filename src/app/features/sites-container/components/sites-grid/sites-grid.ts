@@ -7,14 +7,13 @@ import { Site } from '../../../../shared/models/site';
 import { SiteService } from '../../../../shared/services/site.service';
 import { SiteCard } from '../../../site-card/site-card';
 import { Pagination } from '../pagination/pagination';
-import { CreateSiteForm } from '../create-site-form/create-site-form';
 
 const DEFAULT_PAGE = 1;
 const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-sites-grid',
-  imports: [SiteCard, Pagination, CreateSiteForm],
+  imports: [SiteCard, Pagination],
   templateUrl: './sites-grid.html',
   styleUrl: './sites-grid.scss',
 })
@@ -24,11 +23,12 @@ export class SitesGrid {
   private siteService = inject(SiteService);
 
   parentId = input<string | null>(null);
+  currentPath = input<string>('/');
   siteNavigate = output<Site>();
 
   private routePage = toSignal(
     this.route.queryParamMap.pipe(
-      map(query => {
+      map((query) => {
         const p = query.get('page');
         return p && !isNaN(+p) ? Math.max(1, parseInt(p, 10)) : DEFAULT_PAGE;
       })
@@ -44,8 +44,6 @@ export class SitesGrid {
   sites = signal<Site[]>([]);
   totalPages = signal(0);
   totalItems = signal(0);
-  showCreateForm = signal(false);
-  currentPath = signal<string>('/');
 
   constructor() {
     effect(() => {
@@ -71,23 +69,6 @@ export class SitesGrid {
 
       return () => subscription.unsubscribe();
     });
-
-    effect(() => {
-      const parentId = this.parentId();
-      if (!parentId) {
-        this.currentPath.set('/');
-        return;
-      }
-
-      this.siteService.getSiteById(parentId).subscribe({
-        next: (site) => {
-          this.currentPath.set(site.path || '/');
-        },
-        error: () => {
-          this.currentPath.set('/');
-        },
-      });
-    });
   }
 
   onNavigateToSite(site: Site): void {
@@ -107,22 +88,14 @@ export class SitesGrid {
   }
 
   openCreateForm(): void {
-    this.showCreateForm.set(true);
-  }
-
-  onSiteCreated(site: Site): void {
     const parentId = this.parentId();
-    const page = this.currentPage();
-    this.siteService.getSites(parentId, page, this.pageSize).subscribe({
-      next: (response) => {
-        this.sites.set(response.data);
-        this.totalPages.set(response.pagination.totalPages);
-        this.totalItems.set(response.pagination.totalItems);
-      },
-    });
-  }
+    const path = this.currentPath();
+    const queryParams = { path };
 
-  onCreateFormCancelled(): void {
-    this.showCreateForm.set(false);
+    if (parentId) {
+      this.router.navigate(['/sites', parentId, 'new'], { queryParams });
+    } else {
+      this.router.navigate(['/sites/new'], { queryParams });
+    }
   }
 }

@@ -20,13 +20,13 @@ export class SitesContainer {
   private router = inject(Router);
   private siteService = inject(SiteService);
 
-  private routeSiteId = toSignal(
-    this.route.paramMap.pipe(map(params => params.get('siteId'))),
-    { initialValue: null }
-  );
+  private routeSiteId = toSignal(this.route.paramMap.pipe(map((params) => params.get('siteId'))), {
+    initialValue: null,
+  });
 
   currentSiteId = computed(() => this.routeSiteId());
-  
+  currentPath = computed(() => this.currentSite()?.path || '/');
+
   loading = signal(false);
   error = signal<string | null>(null);
   currentSite = signal<Site | null>(null);
@@ -35,7 +35,7 @@ export class SitesContainer {
   constructor() {
     effect(() => {
       const siteId = this.currentSiteId();
-      
+
       if (!siteId) {
         this.viewMode.set('grid');
         this.currentSite.set(null);
