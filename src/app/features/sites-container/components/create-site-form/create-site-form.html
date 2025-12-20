@@ -16,20 +16,23 @@
   <form [formGroup]="siteForm" (ngSubmit)="onSubmit()">
     <div class="form-row">
       <div class="form-field">
-        <label for="name-ar">Name (Arabic) *</label>
+        <label for="name-en">Name (English) *</label>
         <input
-          id="name-ar"
+          id="name-en"
           type="text"
-          formControlName="nameAr"
-          placeholder="Enter Arabic name"
+          formControlName="nameEn"
+          placeholder="Enter English name"
+          (input)="onEnglishInput($event, 'nameEn')"
         />
-        @if (siteForm.get('nameAr')?.invalid && siteForm.get('nameAr')?.touched) {
+        @if (siteForm.get('nameEn')?.invalid && siteForm.get('nameEn')?.touched) {
           <span class="error">
-            @if (siteForm.get('nameAr')?.errors?.['required']) {
-              Arabic name is required
-            } @else if (siteForm.get('nameAr')?.errors?.['minlength']) {
+            @if (siteForm.get('nameEn')?.errors?.['required']) {
+              English name is required
+            } @else if (siteForm.get('nameEn')?.errors?.['englishOnly']) {
+              Only English letters, digits, and special characters are allowed
+            } @else if (siteForm.get('nameEn')?.errors?.['minlength']) {
               Minimum 3 characters
-            } @else if (siteForm.get('nameAr')?.errors?.['maxlength']) {
+            } @else if (siteForm.get('nameEn')?.errors?.['maxlength']) {
               Maximum 100 characters
             }
           </span>
@@ -37,20 +40,23 @@
       </div>
 
       <div class="form-field">
-        <label for="name-en">Name (English) *</label>
+        <label for="name-ar">Name (Arabic) *</label>
         <input
-          id="name-en"
+          id="name-ar"
           type="text"
-          formControlName="nameEn"
-          placeholder="Enter English name"
+          formControlName="nameAr"
+          placeholder="Enter Arabic name"
+          (input)="onArabicInput($event)"
         />
-        @if (siteForm.get('nameEn')?.invalid && siteForm.get('nameEn')?.touched) {
+        @if (siteForm.get('nameAr')?.invalid && siteForm.get('nameAr')?.touched) {
           <span class="error">
-            @if (siteForm.get('nameEn')?.errors?.['required']) {
-              English name is required
-            } @else if (siteForm.get('nameEn')?.errors?.['minlength']) {
+            @if (siteForm.get('nameAr')?.errors?.['required']) {
+              Arabic name is required
+            } @else if (siteForm.get('nameAr')?.errors?.['arabicOnly']) {
+              Only Arabic letters, digits, and special characters are allowed
+            } @else if (siteForm.get('nameAr')?.errors?.['minlength']) {
               Minimum 3 characters
-            } @else if (siteForm.get('nameEn')?.errors?.['maxlength']) {
+            } @else if (siteForm.get('nameAr')?.errors?.['maxlength']) {
               Maximum 100 characters
             }
           </span>
@@ -71,6 +77,7 @@
         type="text"
         formControlName="integrationCode"
         placeholder="Enter integration code"
+        (input)="onEnglishInput($event, 'integrationCode')"
       />
       @if (siteForm.get('integrationCode')?.invalid && siteForm.get('integrationCode')?.touched) {
         <span class="error">Required</span>
