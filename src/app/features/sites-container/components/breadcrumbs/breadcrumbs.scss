@@ -1,0 +1,34 @@
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-left: 3rem;
+
+  &__item {
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--current {
+      background-color: rgba(0, 0, 0, 0.08);
+      color: var(--text-primary);
+      cursor: default;
+    }
+  }
+
+  &__separator {
+    color: var(--text-tertiary);
+    font-size: 0.75rem;
+  }
+}
+

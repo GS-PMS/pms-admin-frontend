@@ -1,0 +1,37 @@
+<div class="leaf-site-container">
+  <div class="leaf-site">
+    <div class="leaf-site__header">
+      <div class="leaf-site__icon">
+        <img src="assets/icons/parking-logo.svg" alt="Parking area" />
+      </div>
+    
+      <div class="leaf-site__info">
+        <h1 class="leaf-site__name">{{ site().name.en }}</h1>
+        <p class="leaf-site__name-ar">{{ site().name.ar }}</p>
+        <span class="leaf-site__badge">Parking Area</span>
+      </div>
+    </div>
+
+    <div class="leaf-site__details">
+      <div class="leaf-site__detail">
+        <p><strong>Integration code:</strong> <span>{{ site().integrationCode }}</span></p>
+      </div>
+  
+      <div class="leaf-site__detail">
+        <p><strong>Path:</strong> <span>{{ site().path }}</span></p>
+      </div>
+  
+      <div class="leaf-site__detail">
+        <p><strong>Price per hour:</strong> <span>{{ site().pricePerHour }} SAR</span></p>
+      </div>
+  
+      <div class="leaf-site__detail">
+        <p><strong>Number of slots:</strong> <span>{{ site().numberOfSlots }}</span></p>
+      </div>
+  
+      <div class="leaf-site__detail">
+        <p><strong>Polygons:</strong> <span>{{ site().polygons!.length }}</span></p>
+      </div>
+    </div>
+  </div>
+</div>

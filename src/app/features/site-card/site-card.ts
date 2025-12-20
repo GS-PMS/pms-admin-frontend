@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { Site } from '../../shared/models/site';
 
 @Component({
@@ -9,12 +9,9 @@ import { Site } from '../../shared/models/site';
 })
 export class SiteCard {
   site = input.required<Site>();
-
-  get subsiteCount(): number {
-    return this.site().children?.length || 0;
-  }
+  navigate = output<Site>();
 
   onCardDoubleClick(): void {
-    console.log("should move into the site");
+    this.navigate.emit(this.site());
   }
 }

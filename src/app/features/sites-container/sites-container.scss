@@ -1,0 +1,10 @@
+.sites {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__status {
+    text-align: center;
+    color: var(--text-tertiary);
+  }
+}

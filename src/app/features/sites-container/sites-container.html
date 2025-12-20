@@ -1,0 +1,16 @@
+<section class="sites">
+  <app-breadcrumbs />
+
+  @if (loading()) {
+    <h1 class="sites__status">Loading…</h1>
+  } @else if (error()) {
+    <h1 class="sites__status sites__status--error">{{ error() }}</h1>
+  } @else if (viewMode() === 'leaf' && currentSite()) {
+    <app-leaf-site [site]="currentSite()!" />
+  } @else {
+    <app-sites-grid
+      [parentId]="currentSiteId()"
+      (siteNavigate)="onSiteNavigate($event)"
+    />
+  }
+</section>

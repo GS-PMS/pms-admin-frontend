@@ -7,5 +7,10 @@
 .main {
   flex: 1;
   background-color: var(--color-secondary-light);
-  padding: 2rem 1rem;
+  
+  &__container {
+    padding: 2rem 1rem;
+    height: 100%;;
+    margin: 0 auto;
+  }
 }

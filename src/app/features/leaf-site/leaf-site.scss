@@ -1,0 +1,99 @@
+.leaf-site-container {
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.leaf-site {
+  background-color: var(--bg-card);
+  border-radius: 0.75rem;
+  padding: 1.5rem 2rem;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 24px var(--shadow-green-light);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 0.75rem;
+    background-color: var(--color-primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    img {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  &__name-ar {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  
+  &__badge {
+    display: inline-block;
+    width: fit-content;
+    margin-top: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    background-color: var(--color-primary-light);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2rem;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border-light);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    p {
+      color: var(--text-secondary);
+
+      span {
+        margin-left: 0.5rem;
+        color: var(--text-primary);
+      }
+    }
+  }
+}
