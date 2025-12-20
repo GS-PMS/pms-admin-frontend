@@ -1,4 +1,4 @@
-import { Polygon } from './polygon';
+import { CreatePolygonDto } from './CreatePolygonDto';
 
 export interface CreateSiteDto {
   name: {
@@ -11,6 +11,5 @@ export interface CreateSiteDto {
   pricePerHour?: number;
   integrationCode?: string;
   numberOfSlots?: number;
-  polygons?: Polygon[];
+  polygons?: CreatePolygonDto[];
 }
-
