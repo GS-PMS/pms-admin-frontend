@@ -10,45 +10,33 @@ pipeline {
     stages {
 
         stage('🚨 Validate Push Method') {
-            when {
-                expression {
-                    // Check GIT_BRANCH which contains 'origin/main'
-                    def gitBranch = env.GIT_BRANCH ?: ''
-                    return gitBranch.contains('main') || gitBranch.contains('master')
-                }
-            }
             steps {
                 script {
-                    if (!env.CHANGE_ID) {
-                        def committer = sh(
-                            script: 'git log -1 --pretty=format:"%an"',
-                            returnStdout: true
-                        ).trim()
+                    // Check if commit has two parents (merge)
+                    def isMerge = sh(
+                        script: "git rev-parse HEAD^2 >/dev/null 2>&1 && echo true || echo false",
+                        returnStdout: true
+                    ).trim()
 
-                        error("""
+                    // Get committer name
+                    def committer = sh(
+                        script: "git log -1 --pretty=format:%cn",
+                        returnStdout: true
+                    ).trim()
+
+                    if (isMerge == "false") {
+                        error """
                         ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
-
-                        Committer: ${committer}
-
-                        ⚠️  VIOLATION: Direct pushes to 'main' are prohibited.
-
-                        Required workflow:
-                        1. git checkout -b feature/your-feature
-                        2. Make changes and commit
-                        3. git push origin feature/your-feature
-                        4. Create Pull Request on GitHub
-                        5. Get code review approval
-                        6. Merge via Pull Request
-
-                        Your code reached main but won't be deployed.
-                        Revert with: git revert HEAD
-                        """)
+                        Commit ${env.GIT_COMMIT} by ${committer} is a direct commit to main.
+                        Please use a feature branch + Pull Request workflow.
+                        """
                     } else {
-                        echo "✅ Valid: This build is from Pull Request #${env.CHANGE_ID}"
+                        echo "✅ Merge commit detected — committer: ${committer}"
                     }
                 }
             }
         }
+
 
         stage('Checkout Code') {
             steps {
