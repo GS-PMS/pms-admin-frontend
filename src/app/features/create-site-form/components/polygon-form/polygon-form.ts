@@ -31,6 +31,14 @@ export class PolygonForm {
       longitude: [null, [Validators.required, FormValidators.longitude()]],
     });
     this.coordinates.push(coordGroup);
+    this.ensureDuplicateValidator();
+  }
+
+  private ensureDuplicateValidator(): void {
+    if (!this.coordinates.hasValidator(FormValidators.noDuplicateCoordinates)) {
+      this.coordinates.addValidators(FormValidators.noDuplicateCoordinates());
+    }
+    this.coordinates.updateValueAndValidity();
   }
 
   removeCoordinate(coordIndex: number): void {
@@ -55,5 +63,14 @@ export class PolygonForm {
 
   hasCoordinatesError(): boolean {
     return this.coordinates.invalid && this.coordinates.touched;
+  }
+
+  hasDuplicateCoordinatesError(): boolean {
+    return !!this.coordinates.errors?.['duplicateCoordinates'];
+  }
+
+  isCoordinateDuplicate(coordIndex: number): boolean {
+    const error = this.coordinates.errors?.['duplicateCoordinates'];
+    return error?.indices?.includes(coordIndex) ?? false;
   }
 }

@@ -43,6 +43,7 @@ export class CreateSiteForm implements OnInit {
         '',
         [
           Validators.required,
+          FormValidators.noWhitespaceOnly(),
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.englishOnly(),
@@ -52,6 +53,7 @@ export class CreateSiteForm implements OnInit {
         '',
         [
           Validators.required,
+          FormValidators.noWhitespaceOnly(),
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.arabicOnly(),
@@ -61,9 +63,10 @@ export class CreateSiteForm implements OnInit {
         '',
         [
           Validators.required,
+          FormValidators.noWhitespaceOnly(),
           Validators.minLength(3),
           Validators.maxLength(100),
-          FormValidators.englishOnly(),
+          FormValidators.integrationCodeValidator(),
         ],
       ],
       path: [{ value: this.currentPath, disabled: true }],
@@ -89,7 +92,12 @@ export class CreateSiteForm implements OnInit {
         Validators.min(0),
         FormValidators.maxDecimalPlaces(2),
       ]);
-      slotsControl?.setValidators([Validators.required, Validators.min(1), Validators.max(10000)]);
+      slotsControl?.setValidators([
+        Validators.required,
+        Validators.min(1),
+        Validators.max(10000),
+        FormValidators.integer(),
+      ]);
       polygonsArray.setValidators([Validators.minLength(MIN_POLYGONS_FOR_LEAF)]);
 
       if (polygonsArray.length === 0) {
@@ -116,8 +124,19 @@ export class CreateSiteForm implements OnInit {
 
   addPolygon(): void {
     const polygonGroup = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
-      coordinates: this.fb.array([], [Validators.minLength(MIN_COORDINATES_PER_POLYGON)]),
+      name: [
+        '',
+        [
+          Validators.required,
+          FormValidators.noWhitespaceOnly(),
+          Validators.minLength(3),
+          Validators.maxLength(100),
+        ],
+      ],
+      coordinates: this.fb.array(
+        [],
+        [Validators.minLength(MIN_COORDINATES_PER_POLYGON), FormValidators.noDuplicateCoordinates()]
+      ),
     });
 
     // add minimum 3 coordinates by default

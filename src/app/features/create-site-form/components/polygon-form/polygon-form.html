@@ -25,7 +25,8 @@
     />
     @if (isFieldInvalid('name')) {
     <span class="polygon-form__error">
-      @if (polygonGroup().get('name')?.errors?.['required']) { Polygon name is required. } @else if
+      @if (polygonGroup().get('name')?.errors?.['required'] ||
+      polygonGroup().get('name')?.errors?.['whitespaceOnly']) { Polygon name is required. } @else if
       (polygonGroup().get('name')?.errors?.['minlength'] ||
       polygonGroup().get('name')?.errors?.['maxlength']) { Polygon name must be between 3 and 100
       characters. }
@@ -47,13 +48,19 @@
       </button>
     </div>
 
-    @if (hasCoordinatesError()) {
+    @if (hasCoordinatesError() && coordinates.errors?.['minlength']) {
     <span class="polygon-form__error">At least 3 coordinates are required per polygon.</span>
+    } @if (hasDuplicateCoordinatesError()) {
+    <span class="polygon-form__error">Duplicate coordinates are not allowed.</span>
     }
 
     <div class="coordinates__list" formArrayName="coordinates">
       @for (coord of coordinates.controls; track $index; let cooId = $index) {
-      <div class="coordinates__row" [formGroupName]="cooId">
+      <div
+        class="coordinates__row"
+        [formGroupName]="cooId"
+        [class.coordinates__row--duplicate]="isCoordinateDuplicate(cooId)"
+      >
         <span class="coordinates__index">{{ cooId + 1 }}.</span>
 
         <div class="coordinates__field">
@@ -69,7 +76,7 @@
           <span class="polygon-form__error polygon-form__error--inline">
             @if (coordinates.at(cooId).get('latitude')?.errors?.['required']) { Required } @else if
             (coordinates.at(cooId).get('latitude')?.errors?.['latitude']) { Invalid (-90 to 90) }
-            @else if (coordinates.at(cooId).get('latitude')?.errors?.['minDecimals']) { Min 4
+            @else if (coordinates.at(cooId).get('latitude')?.errors?.['maxDecimals']) { Max 6
             decimals }
           </span>
           }
@@ -88,7 +95,7 @@
           <span class="polygon-form__error polygon-form__error--inline">
             @if (coordinates.at(cooId).get('longitude')?.errors?.['required']) { Required } @else if
             (coordinates.at(cooId).get('longitude')?.errors?.['longitude']) { Invalid (-180 to 180)
-            } @else if (coordinates.at(cooId).get('longitude')?.errors?.['minDecimals']) { Min 4
+            } @else if (coordinates.at(cooId).get('longitude')?.errors?.['maxDecimals']) { Max 6
             decimals }
           </span>
           }
