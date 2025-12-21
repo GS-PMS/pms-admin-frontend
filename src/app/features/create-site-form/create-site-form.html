@@ -1,0 +1,204 @@
+<section class="create-site-form">
+  <div class="create-site-form__header">
+    <h1 class="create-site-form__title">Create New Site</h1>
+    <p class="create-site-form__subtitle">
+      Adding site under: <strong>{{ currentPath }}</strong>
+    </p>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="create-site-form__form">
+    <div class="form-section">
+      <h2 class="form-section__title">Basic Information</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nameEn" class="form-label"
+            >Name (English) <span class="required">*</span></label
+          >
+          <input
+            type="text"
+            id="nameEn"
+            formControlName="nameEn"
+            class="form-input"
+            [class.form-input--error]="isFieldInvalid('nameEn')"
+            placeholder="Enter site name in English"
+          />
+          @if (isFieldInvalid('nameEn')) {
+          <span class="form-error">
+            @if (form.get('nameEn')?.errors?.['required']) { Name (English) is required. } @else if
+            (form.get('nameEn')?.errors?.['minlength'] || form.get('nameEn')?.errors?.['maxlength'])
+            { Name must be between 3 and 100 characters. } @else if
+            (form.get('nameEn')?.errors?.['englishOnly']) { Only English characters are allowed. }
+          </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="nameAr" class="form-label"
+            >Name (Arabic) <span class="required">*</span></label
+          >
+          <input
+            type="text"
+            id="nameAr"
+            formControlName="nameAr"
+            class="form-input"
+            [class.form-input--error]="isFieldInvalid('nameAr')"
+            placeholder="أدخل اسم الموقع بالعربية"
+            dir="rtl"
+          />
+          @if (isFieldInvalid('nameAr')) {
+          <span class="form-error">
+            @if (form.get('nameAr')?.errors?.['required']) { Name (Arabic) is required. } @else if
+            (form.get('nameAr')?.errors?.['minlength'] || form.get('nameAr')?.errors?.['maxlength'])
+            { Name must be between 3 and 100 characters. } @else if
+            (form.get('nameAr')?.errors?.['arabicOnly']) { Only Arabic characters are allowed. }
+          </span>
+          }
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="integrationCode" class="form-label"
+            >Integration Code <span class="required">*</span></label
+          >
+          <input
+            type="text"
+            id="integrationCode"
+            formControlName="integrationCode"
+            class="form-input"
+            [class.form-input--error]="isFieldInvalid('integrationCode')"
+            placeholder="Enter integration code"
+          />
+          @if (isFieldInvalid('integrationCode')) {
+          <span class="form-error">
+            @if (form.get('integrationCode')?.errors?.['required']) { Integration code is required.
+            } @else if (form.get('integrationCode')?.errors?.['minlength'] ||
+            form.get('integrationCode')?.errors?.['maxlength']) { Integration code must be between 3
+            and 100 characters. }
+          </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="path" class="form-label">Path</label>
+          <input
+            type="text"
+            id="path"
+            formControlName="path"
+            class="form-input form-input--disabled"
+            readonly
+          />
+        </div>
+      </div>
+
+      <div class="form-group form-group--checkbox">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="isLeaf" class="checkbox-input" />
+          <span class="checkbox-text">Is Leaf Site (Parking Area)</span>
+        </label>
+      </div>
+    </div>
+
+    @if (form.get('isLeaf')?.value) {
+    <div class="form-section form-section--leaf">
+      <h2 class="form-section__title">Parking Area Details</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="pricePerHour" class="form-label"
+            >Price per Hour (EGP) <span class="required">*</span></label
+          >
+          <input
+            type="number"
+            id="pricePerHour"
+            formControlName="pricePerHour"
+            class="form-input"
+            [class.form-input--error]="isFieldInvalid('pricePerHour')"
+            placeholder="Enter price per hour"
+            min="0"
+            step="0.01"
+          />
+          @if (isFieldInvalid('pricePerHour')) {
+          <span class="form-error">
+            @if (form.get('pricePerHour')?.errors?.['required']) { Price per hour is required. }
+            @else if (form.get('pricePerHour')?.errors?.['min']) { Price must be at least 0.
+            <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) { Price can have
+            up to 2 decimal places. }
+          </span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="numberOfSlots" class="form-label"
+            >Number of Slots <span class="required">*</span></label
+          >
+          <input
+            type="number"
+            id="numberOfSlots"
+            formControlName="numberOfSlots"
+            class="form-input"
+            [class.form-input--error]="isFieldInvalid('numberOfSlots')"
+            placeholder="Enter number of parking slots"
+            min="1"
+            step="1"
+          />
+          @if (isFieldInvalid('numberOfSlots')) {
+          <span class="form-error">
+            @if (form.get('numberOfSlots')?.errors?.['required']) { Number of slots is required. }
+            @else if (form.get('numberOfSlots')?.errors?.['min']) { Must be at least 1 slot.
+            <!---->} @else if (form.get('numberOfSlots')?.errors?.['max']) { Maximum 10,000 slots
+            allowed. }
+          </span>
+          }
+        </div>
+      </div>
+
+      <div class="polygons-section">
+        <div class="polygons-section__header">
+          <h3 class="polygons-section__title">Polygons <span class="required">*</span></h3>
+          <button type="button" class="btn btn--secondary btn--sm" (click)="addPolygon()">
+            Add Polygon
+          </button>
+        </div>
+
+        @if (hasPolygonError()) {
+        <span class="form-error">At least 1 polygon is required for leaf sites.</span>
+        }
+
+        <div class="polygons-list" formArrayName="polygons">
+          @for (polygon of polygons.controls; track $index; let pIdx = $index) {
+          <app-polygon-form
+            [polygonGroup]="getPolygonGroup(pIdx)"
+            [polygonIndex]="pIdx"
+            [canRemove]="polygons.length > 1"
+            (remove)="removePolygon(pIdx)"
+          />
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- submit Section (this comment to prevent linter from merging @if with line 189) -->
+    @if (submitError()) {
+    <div class="form-alert form-alert--error">
+      {{ submitError() }}
+    </div>
+    }
+
+    <div class="form-actions">
+      <button
+        type="button"
+        class="btn btn--secondary"
+        (click)="onCancel()"
+        [disabled]="submitting()"
+      >
+        Cancel
+      </button>
+      <button type="submit" class="btn btn--primary" [disabled]="submitting()">
+        @if (submitting()) { Creating... } @else { Create Site }
+      </button>
+    </div>
+  </form>
+</section>

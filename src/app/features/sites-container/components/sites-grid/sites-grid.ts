@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { forkJoin, of, map } from 'rxjs';
+import { map } from 'rxjs';
 
 import { Site } from '../../../../shared/models/site';
 import { SiteService } from '../../../../shared/services/site.service';
@@ -23,11 +23,12 @@ export class SitesGrid {
   private siteService = inject(SiteService);
 
   parentId = input<string | null>(null);
+  currentPath = input<string>('/');
   siteNavigate = output<Site>();
 
   private routePage = toSignal(
     this.route.queryParamMap.pipe(
-      map(query => {
+      map((query) => {
         const p = query.get('page');
         return p && !isNaN(+p) ? Math.max(1, parseInt(p, 10)) : DEFAULT_PAGE;
       })
@@ -84,5 +85,17 @@ export class SitesGrid {
     const commands = parentId ? ['/sites', parentId] : ['/sites'];
     const queryParams = clampedPage > DEFAULT_PAGE ? { page: clampedPage } : {};
     this.router.navigate(commands, { queryParams });
+  }
+
+  openCreateForm(): void {
+    const parentId = this.parentId();
+    const path = this.currentPath();
+    const queryParams = { path };
+
+    if (parentId) {
+      this.router.navigate(['/sites', parentId, 'new'], { queryParams });
+    } else {
+      this.router.navigate(['/sites/new'], { queryParams });
+    }
   }
 }
