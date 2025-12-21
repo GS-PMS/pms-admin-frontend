@@ -18,4 +18,4 @@ COPY --from=build /app/dist/pms-admin-frontend ./dist
 
 EXPOSE 4200
 
-CMD ["serve", "-s", "dist/browser", "-l", "3000"]
+CMD ["serve", "-s", "dist/browser", "-l", "4200"]
