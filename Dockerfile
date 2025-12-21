@@ -16,6 +16,6 @@ WORKDIR /app
 RUN npm install -g serve
 COPY --from=build /app/dist/pms-admin-frontend ./dist
 
-EXPOSE 3000
+EXPOSE 4200
 
 CMD ["serve", "-s", "dist/browser", "-l", "3000"]
