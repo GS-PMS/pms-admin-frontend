@@ -125,7 +125,7 @@
           />
           @if (isFieldInvalid('pricePerHour')) {
           <span class="form-error">
-            @if (form.get('pricePerHour')?.errors?.['required']) { Price per hour is required. }
+            @if (form.get('pricePerHour')?.errors?.['required']) { Please enter a valid format. }
             @else if (form.get('pricePerHour')?.errors?.['min']) { Price must be at least 0.
             <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) { Price can have
             up to 2 decimal places. }
@@ -149,8 +149,8 @@
           />
           @if (isFieldInvalid('numberOfSlots')) {
           <span class="form-error">
-            @if (form.get('numberOfSlots')?.errors?.['required']) { Number of slots is required. }
-            @else if (form.get('numberOfSlots')?.errors?.['integer']) { Must be a whole number. }
+            @if (form.get('numberOfSlots')?.errors?.['required']) { Please enter a valid format. }
+            @else if (form.get('numberOfSlots')?.errors?.['integer']) { Must be an integer number. }
             @else if (form.get('numberOfSlots')?.errors?.['min']) { Must be at least 1 slot.
             <!---->} @else if (form.get('numberOfSlots')?.errors?.['max']) { Maximum 10,000 slots
             allowed. }
