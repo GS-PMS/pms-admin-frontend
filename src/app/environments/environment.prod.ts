@@ -1,4 +1,4 @@
 export const environment = {
-    production: true,
-    domain: "http://localhost:8080/api/sites"
-}
+  production: true,
+  domain: 'http://localhost:5003/api/site',
+};
