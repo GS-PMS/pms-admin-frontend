@@ -1,4 +1,4 @@
-<div class="polygon-form" [formGroup]="polygonGroup()">
+<div class="polygon-form" [formGroup]="polygonGroup()" [id]="polygonIndex()">
   <div class="polygon-form__header">
     <h4 class="polygon-form__title">Polygon {{ polygonIndex() + 1 }}</h4>
     @if (canRemove()) {
@@ -6,6 +6,7 @@
       type="button"
       class="polygon-form__btn polygon-form__btn--danger polygon-form__btn--sm"
       (click)="onRemove()"
+      [id]="'remove-btn-' + polygonIndex()"
     >
       Remove
     </button>
@@ -13,7 +14,7 @@
   </div>
 
   <div class="polygon-form__field">
-    <label class="polygon-form__label"
+    <label class="polygon-form__label" [for]="'polygonName-' + polygonIndex()"
       >Polygon Name <span class="polygon-form__required">*</span></label
     >
     <input
@@ -22,9 +23,10 @@
       class="polygon-form__input"
       [class.polygon-form__input--error]="isFieldInvalid('name')"
       placeholder="Enter polygon name (e.g., Zone A)"
+      [id]="'polygonName-' + polygonIndex()"
     />
     @if (isFieldInvalid('name')) {
-    <span class="polygon-form__error">
+    <span class="polygon-form__error" [id]="'polygonName-error' + polygonIndex()">
       @if (polygonGroup().get('name')?.errors?.['required'] ||
       polygonGroup().get('name')?.errors?.['whitespaceOnly']) { Polygon name is required. } @else if
       (polygonGroup().get('name')?.errors?.['minlength'] ||
@@ -43,6 +45,7 @@
         type="button"
         class="polygon-form__btn polygon-form__btn--outline polygon-form__btn--sm"
         (click)="addCoordinate()"
+        [id]="'point-btn-' + polygonIndex()"
       >
         Add Point
       </button>
@@ -60,6 +63,7 @@
         class="coordinates__row"
         [formGroupName]="cooId"
         [class.coordinates__row--duplicate]="isCoordinateDuplicate(cooId)"
+        [id]="'polygon-' + polygonIndex() + '-row-' + cooId"
       >
         <span class="coordinates__index">{{ cooId + 1 }}.</span>
 
@@ -71,9 +75,13 @@
             [class.polygon-form__input--error]="isCoordinateFieldInvalid(cooId, 'latitude')"
             placeholder="Latitude"
             step="any"
+            [id]="'polygon-' + polygonIndex() + '-lat-' + cooId"
           />
           @if (isCoordinateFieldInvalid(cooId, 'latitude')) {
-          <span class="polygon-form__error polygon-form__error--inline">
+          <span
+            class="polygon-form__error polygon-form__error--inline"
+            [id]="'polygon-' + polygonIndex() + '-lat-' + cooId + '-error'"
+          >
             @if (coordinates.at(cooId).get('latitude')?.errors?.['required']) { Required } @else if
             (coordinates.at(cooId).get('latitude')?.errors?.['latitude']) { Invalid (-90 to 90) }
             @else if (coordinates.at(cooId).get('latitude')?.errors?.['maxDecimals']) { Max 6
@@ -90,9 +98,13 @@
             [class.polygon-form__input--error]="isCoordinateFieldInvalid(cooId, 'longitude')"
             placeholder="Longitude"
             step="any"
+            [id]="'polygon-' + polygonIndex() + '-lng-' + cooId"
           />
           @if (isCoordinateFieldInvalid(cooId, 'longitude')) {
-          <span class="polygon-form__error polygon-form__error--inline">
+          <span
+            class="polygon-form__error polygon-form__error--inline"
+            [id]="'polygon-' + polygonIndex() + '-lng-' + cooId + '-error'"
+          >
             @if (coordinates.at(cooId).get('longitude')?.errors?.['required']) { Required } @else if
             (coordinates.at(cooId).get('longitude')?.errors?.['longitude']) { Invalid (-180 to 180)
             } @else if (coordinates.at(cooId).get('longitude')?.errors?.['maxDecimals']) { Max 6

@@ -1,9 +1,9 @@
 export interface Polygon {
-    id: string;
-    siteId: string;
-    name: string;
-    coordinates: {
-        latitude: number;
-        longitude: number;
-    }[];
+  id: string;
+  siteId?: string;
+  name: string;
+  polygonPoints: {
+    latitude: number;
+    longitude: number;
+  }[];
 }

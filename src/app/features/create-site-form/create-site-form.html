@@ -2,7 +2,7 @@
   <div class="create-site-form__header">
     <h1 class="create-site-form__title">Create New Site</h1>
     <p class="create-site-form__subtitle">
-      Adding site under: <strong>{{ currentPath }}</strong>
+      Adding site under: <strong id="site-path">{{ currentPath }}</strong>
     </p>
   </div>
 
@@ -24,7 +24,7 @@
             placeholder="Enter site name in English"
           />
           @if (isFieldInvalid('nameEn')) {
-          <span class="form-error">
+          <span class="form-error" id="nameEn-error">
             @if (form.get('nameEn')?.errors?.['required'] ||
             form.get('nameEn')?.errors?.['whitespaceOnly']) { Name (English) is required. } @else if
             (form.get('nameEn')?.errors?.['minlength'] || form.get('nameEn')?.errors?.['maxlength'])
@@ -48,7 +48,7 @@
             dir="rtl"
           />
           @if (isFieldInvalid('nameAr')) {
-          <span class="form-error">
+          <span class="form-error" id="nameAr-error">
             @if (form.get('nameAr')?.errors?.['required'] ||
             form.get('nameAr')?.errors?.['whitespaceOnly']) { Name (Arabic) is required. } @else if
             (form.get('nameAr')?.errors?.['minlength'] || form.get('nameAr')?.errors?.['maxlength'])
@@ -73,7 +73,7 @@
             placeholder="Enter integration code"
           />
           @if (isFieldInvalid('integrationCode')) {
-          <span class="form-error">
+          <span class="form-error" id="integrationCode-error">
             @if (form.get('integrationCode')?.errors?.['required'] ||
             form.get('integrationCode')?.errors?.['whitespaceOnly']) { Integration code is required.
             } @else if (form.get('integrationCode')?.errors?.['minlength'] ||
@@ -98,7 +98,7 @@
 
       <div class="form-group form-group--checkbox">
         <label class="checkbox-label">
-          <input type="checkbox" formControlName="isLeaf" class="checkbox-input" />
+          <input type="checkbox" formControlName="isLeaf" class="checkbox-input" id="isLeaf" />
           <span class="checkbox-text">Is Leaf Site (Parking Area)</span>
         </label>
       </div>
@@ -124,7 +124,7 @@
             step="0.01"
           />
           @if (isFieldInvalid('pricePerHour')) {
-          <span class="form-error">
+          <span class="form-error" id="pricePerHour-error">
             @if (form.get('pricePerHour')?.errors?.['required']) { Please enter a valid format. }
             @else if (form.get('pricePerHour')?.errors?.['min']) { Price must be at least 0.
             <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) { Price can have
@@ -148,7 +148,7 @@
             step="1"
           />
           @if (isFieldInvalid('numberOfSlots')) {
-          <span class="form-error">
+          <span class="form-error" id="numberOfSlots-error">
             @if (form.get('numberOfSlots')?.errors?.['required']) { Please enter a valid format. }
             @else if (form.get('numberOfSlots')?.errors?.['integer']) { Must be an integer number. }
             @else if (form.get('numberOfSlots')?.errors?.['min']) { Must be at least 1 slot.
@@ -168,7 +168,9 @@
         </div>
 
         @if (hasPolygonError()) {
-        <span class="form-error">At least 1 polygon is required for leaf sites.</span>
+        <span class="form-error" id="polygon-error"
+          >At least 1 polygon is required for leaf sites.</span
+        >
         }
 
         <div class="polygons-list" formArrayName="polygons">
@@ -198,10 +200,11 @@
         class="btn btn--secondary"
         (click)="onCancel()"
         [disabled]="submitting()"
+        id="cancel-btn"
       >
         Cancel
       </button>
-      <button type="submit" class="btn btn--primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary" [disabled]="submitting()" id="sub-btn">
         @if (submitting()) { Creating... } @else { Create Site }
       </button>
     </div>
