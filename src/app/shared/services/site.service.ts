@@ -5,6 +5,8 @@ import { Site } from '../models/site';
 import { PaginatedResponse } from '../models/PaginatedResponse';
 import { Breadcrumb } from '../models/Breadcrumb';
 import { CreateSiteDto } from '../models/CreateSiteDto';
+import { CreatePolygonDto } from '../models/CreatePolygonDto';
+import { Polygon } from '../models/polygon';
 import { environment } from '../../environments/environment';
 
 const DEFAULT_PAGE = 1;
@@ -41,6 +43,8 @@ export class SiteService {
   createSite(siteData: CreateSiteDto): Observable<Site> {
     return this.http.post<Site>(this.baseUrl, siteData);
   }
+
+  createPolygon(polygonData: CreatePolygonDto): Observable<Polygon> {
+    return this.http.post<Polygon>(`${this.baseUrl}/${polygonData.siteId}/polygons`, polygonData);
+  }
 }
-
-

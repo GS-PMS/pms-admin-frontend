@@ -1,0 +1,91 @@
+<div class="polygon-list" id="polygon-list-container">
+  <div class="polygon-list__header">
+    <h2 class="polygon-list__title" id="polygon-list-title">Polygons</h2>
+    <button
+      type="button"
+      class="polygon-list__btn polygon-list__btn--primary"
+      id="add-polygon-btn"
+      (click)="toggleAddForm()"
+      [disabled]="showAddForm()"
+    >
+      Add Polygon
+    </button>
+  </div>
+
+  @if (showAddForm()) {
+  <div class="polygon-list__add-form" id="add-polygon-form-container">
+    <form (ngSubmit)="submitPolygon()" id="add-polygon-form">
+      @if (errorMessage()) {
+      <div class="polygon-list__error-banner" id="polygon-form-error">
+        {{ errorMessage() }}
+      </div>
+      }
+
+      <app-polygon-form [polygonGroup]="polygonGroup" [polygonIndex]="0" [canRemove]="false" />
+
+      <div class="polygon-list__form-actions">
+        <button
+          type="button"
+          class="polygon-list__btn polygon-list__btn--outline"
+          id="cancel-polygon-btn"
+          (click)="cancelAdd()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="polygon-list__btn polygon-list__btn--primary"
+          id="save-polygon-btn"
+          [disabled]="isSubmitting()"
+        >
+          @if (isSubmitting()) { Saving... } @else { Save Polygon }
+        </button>
+      </div>
+    </form>
+  </div>
+  } @if (polygons().length === 0) {
+  <div class="polygon-list__empty" id="polygon-list-empty">
+    <p>No polygons defined for this site</p>
+  </div>
+  } @else {
+  <div class="polygon-list__items" id="polygon-list-items">
+    @for (polygon of polygons(); track polygon.id) {
+    <div class="polygon-item" [id]="'polygon-item-' + polygon.id">
+      <div class="polygon-item__header">
+        <h3 class="polygon-item__name" [id]="'polygon-name-' + polygon.id">{{ polygon.name }}</h3>
+      </div>
+
+      <div class="polygon-item__details">
+        <div class="polygon-item__detail">
+          <span class="polygon-item__label">Polygon Points:</span>
+          <span class="polygon-item__value" [id]="'polygon-points-count-' + polygon.id"
+            >{{ polygon.polygonPoints.length }} points</span
+          >
+        </div>
+      </div>
+
+      <div class="polygon-item__polygonpoints" [id]="'polygon-points-' + polygon.id">
+        <div class="polygonpoints-list">
+          @for (coord of polygon.polygonPoints; track $index) {
+          <div class="polygonpoint-item" [id]="'polygon-' + polygon.id + '-point-' + $index">
+            <span class="polygonpoint-item__index">{{ $index + 1 }}</span>
+            <span
+              class="polygonpoint-item__lat"
+              [id]="'polygon-' + polygon.id + '-point-' + $index + '-lat'"
+              >Lat: {{ coord.latitude.toFixed(6) }}</span
+            >
+            <span
+              class="polygonpoint-item__lng"
+              [id]="'polygon-' + polygon.id + '-point-' + $index + '-lng'"
+              >Lng: {{ coord.longitude.toFixed(6) }}</span
+            >
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  }
+</div>
