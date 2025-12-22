@@ -14,7 +14,7 @@
 
   @if (showAddForm()) {
   <div class="polygon-list__add-form" id="add-polygon-form-container">
-    <form (ngSubmit)="submitPolygon()" id="add-polygon-form">
+    <form [formGroup]="polygonGroup" (ngSubmit)="submitPolygon()" id="add-polygon-form">
       @if (errorMessage()) {
       <div class="polygon-list__error-banner" id="polygon-form-error">
         {{ errorMessage() }}
@@ -50,34 +50,34 @@
   </div>
   } @else {
   <div class="polygon-list__items" id="polygon-list-items">
-    @for (polygon of polygons(); track polygon.id) {
-    <div class="polygon-item" [id]="'polygon-item-' + polygon.id">
+    @for (polygon of polygons(); track $index; let polyIndex = $index) {
+    <div class="polygon-item" [id]="'polygon-item-' + polyIndex">
       <div class="polygon-item__header">
-        <h3 class="polygon-item__name" [id]="'polygon-name-' + polygon.id">{{ polygon.name }}</h3>
+        <h3 class="polygon-item__name" [id]="'polygon-name-' + polyIndex">{{ polygon.name }}</h3>
       </div>
 
       <div class="polygon-item__details">
         <div class="polygon-item__detail">
           <span class="polygon-item__label">Polygon Points:</span>
-          <span class="polygon-item__value" [id]="'polygon-points-count-' + polygon.id"
+          <span class="polygon-item__value" [id]="'polygon-points-count-' + polyIndex"
             >{{ polygon.polygonPoints.length }} points</span
           >
         </div>
       </div>
 
-      <div class="polygon-item__polygonpoints" [id]="'polygon-points-' + polygon.id">
+      <div class="polygon-item__polygonpoints" [id]="'polygon-points-' + polyIndex">
         <div class="polygonpoints-list">
-          @for (coord of polygon.polygonPoints; track $index) {
-          <div class="polygonpoint-item" [id]="'polygon-' + polygon.id + '-point-' + $index">
-            <span class="polygonpoint-item__index">{{ $index + 1 }}</span>
+          @for (coord of polygon.polygonPoints; track $index; let pointIndex = $index) {
+          <div class="polygonpoint-item" [id]="'polygon-' + polyIndex + '-point-' + pointIndex">
+            <span class="polygonpoint-item__index">{{ pointIndex + 1 }}</span>
             <span
               class="polygonpoint-item__lat"
-              [id]="'polygon-' + polygon.id + '-point-' + $index + '-lat'"
+              [id]="'polygon-' + polyIndex + '-point-' + pointIndex + '-lat'"
               >Lat: {{ coord.latitude.toFixed(6) }}</span
             >
             <span
               class="polygonpoint-item__lng"
-              [id]="'polygon-' + polygon.id + '-point-' + $index + '-lng'"
+              [id]="'polygon-' + polyIndex + '-point-' + pointIndex + '-lng'"
               >Lng: {{ coord.longitude.toFixed(6) }}</span
             >
           </div>
