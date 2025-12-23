@@ -6,6 +6,15 @@
     </p>
   </div>
 
+  @if (submitSuccess()) {
+  <div class="form-alert form-alert--success" id="success-msg">
+    Site created successfully!
+    <button type="button" class="btn btn--primary btn--sm" id="nav-btn" (click)="navigateBack()">
+      Go to Sites
+    </button>
+  </div>
+  }
+
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="create-site-form__form">
     <div class="form-section">
       <h2 class="form-section__title">Basic Information</h2>
@@ -189,7 +198,7 @@
 
     <!-- submit Section (this comment to prevent linter from merging @if with line 189) -->
     @if (submitError()) {
-    <div class="form-alert form-alert--error">
+    <div class="form-alert form-alert--error" id="backend-error-msg">
       {{ submitError() }}
     </div>
     }

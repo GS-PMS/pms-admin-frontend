@@ -11,8 +11,8 @@
   <h1 class="sites-grid__status">No sites found at this level.</h1>
   } @else {
   <div class="sites-grid__container">
-    @for (site of sites(); track site.id) {
-    <app-site-card [site]="site" (navigate)="onNavigateToSite($event)" />
+    @for (site of sites(); track $index; let cardIdx = $index) {
+    <app-site-card [site]="site" (navigate)="onNavigateToSite($event)" [cardIdx]="cardIdx" />
     }
   </div>
 
