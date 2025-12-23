@@ -1,4 +1,4 @@
-<div class="site-card" (dblclick)="onCardDoubleClick()">
+<div class="site-card" (dblclick)="onCardDoubleClick()" [id]="cardIdx()">
   <div class="site-card__icon" [class.site-card__icon--leaf]="site().isLeaf">
     <img
       [src]="

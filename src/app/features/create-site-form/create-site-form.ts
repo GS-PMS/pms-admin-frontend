@@ -6,6 +6,7 @@ import { FormValidators } from './validators/form-validators';
 import { SiteService } from '../../shared/services/site.service';
 import { CreateSiteDto } from '../../shared/models/CreateSiteDto';
 import { PolygonForm } from './components/polygon-form/polygon-form';
+import { timeout } from 'rxjs';
 
 const MIN_COORDINATES_PER_POLYGON = 3;
 const MIN_POLYGONS_FOR_LEAF = 1;
@@ -29,6 +30,7 @@ export class CreateSiteForm implements OnInit {
 
   submitting = signal(false);
   submitError = signal<string | null>(null);
+  submitSuccess = signal(false);
 
   ngOnInit(): void {
     this.parentId = this.route.snapshot.paramMap.get('siteId');
@@ -170,6 +172,7 @@ export class CreateSiteForm implements OnInit {
 
     this.submitting.set(true);
     this.submitError.set(null);
+    this.submitSuccess.set(false);
 
     const formValue = this.form.getRawValue();
     const isLeaf = formValue.isLeaf;
@@ -200,11 +203,12 @@ export class CreateSiteForm implements OnInit {
     this.siteService.createSite(siteData).subscribe({
       next: () => {
         this.submitting.set(false);
-        this.navigateBack();
+        this.submitSuccess.set(true);
       },
       error: (err) => {
         this.submitting.set(false);
         this.submitError.set(err?.error?.message || 'Failed to create site. Please try again.');
+        this.submitSuccess.set(false);
       },
     });
   }
@@ -213,7 +217,7 @@ export class CreateSiteForm implements OnInit {
     this.navigateBack();
   }
 
-  private navigateBack(): void {
+  navigateBack(): void {
     if (this.parentId) {
       this.router.navigate(['/sites', this.parentId]);
     } else {
