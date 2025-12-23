@@ -12,11 +12,13 @@
 
   <div class="site-card__name site-card__name--ar">{{ site().name.ar }}</div>
 
-  <div class="site-card__code">Integration Code: {{ site().integrationCode }}</div>
+  <div class="site-card__code">
+    {{ 'siteCard.integrationCode' | translate }}: {{ site().integrationCode }}
+  </div>
 
   @if (site().isLeaf) {
-  <p class="site-card__badge site-card__badge--leaf">Parking Area</p>
+  <p class="site-card__badge site-card__badge--leaf">{{ 'sites.parkingArea' | translate }}</p>
   } @else {
-  <p class="site-card__badge">{{ site().childrenCount }} subsites</p>
+  <p class="site-card__badge">{{ site().childrenCount }} {{ 'sites.subsites' | translate }}</p>
   }
 </div>

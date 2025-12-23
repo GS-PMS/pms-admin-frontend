@@ -1,5 +1,6 @@
 import { Component, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Polygon } from '../../../../shared/models/polygon';
 import { CreatePolygonDto } from '../../../../shared/models/CreatePolygonDto';
@@ -11,7 +12,7 @@ const MIN_COORDINATES = 3;
 
 @Component({
   selector: 'app-polygon-list',
-  imports: [ReactiveFormsModule, PolygonForm],
+  imports: [ReactiveFormsModule, PolygonForm, TranslateModule],
   templateUrl: './polygon-list.html',
   styleUrl: './polygon-list.scss',
 })

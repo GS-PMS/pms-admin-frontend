@@ -1,0 +1,124 @@
+{
+  "header": {
+    "title": "نظام إدارة مواقف السيارات",
+    "subtitle": "أدر مواقف سياراتك بكفاءة",
+    "langButton": "English"
+  },
+  "common": {
+    "loading": "جاري التحميل…",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "remove": "إزالة",
+    "required": "مطلوب",
+    "previous": "السابق",
+    "next": "التالي",
+    "showing": "عرض",
+    "of": "من"
+  },
+  "sites": {
+    "allSites": "جميع المواقع",
+    "addSite": "إضافة موقع",
+    "loadingSites": "جاري تحميل المواقع…",
+    "noSitesFound": "لا توجد مواقع في هذا المستوى.",
+    "subsites": "مواقع فرعية",
+    "integrationCode": "كود التكامل",
+    "parkingArea": "منطقة ركن"
+  },
+  "siteCard": {
+    "integrationCode": "كود التكامل"
+  },
+  "leafSite": {
+    "parkingArea": "منطقة ركن",
+    "integrationCode": "كود التكامل:",
+    "path": "المسار:",
+    "pricePerHour": "السعر بالساعة:",
+    "numberOfSlots": "عدد الأماكن:",
+    "polygons": "المضلعات:",
+    "currency": "ر.س"
+  },
+  "polygonList": {
+    "title": "المضلعات",
+    "addPolygon": "إضافة مضلع",
+    "noPolygons": "لا توجد مضلعات محددة لهذا الموقع",
+    "polygonPoints": "نقاط المضلع:",
+    "points": "نقاط",
+    "lat": "خط العرض:",
+    "lng": "خط الطول:",
+    "saving": "جاري الحفظ...",
+    "savePolygon": "حفظ المضلع"
+  },
+  "createSiteForm": {
+    "title": "إنشاء موقع جديد",
+    "addingSiteUnder": "إضافة موقع تحت:",
+    "successMessage": "تم إنشاء الموقع بنجاح!",
+    "goToSites": "الذهاب للمواقع",
+    "basicInfo": "المعلومات الأساسية",
+    "nameEn": "الاسم (بالإنجليزية)",
+    "nameAr": "الاسم (بالعربية)",
+    "integrationCode": "كود التكامل",
+    "path": "المسار",
+    "isLeafSite": "موقع نهائي (منطقة ركن)",
+    "parkingDetails": "تفاصيل منطقة الركن",
+    "pricePerHour": "السعر بالساعة (ريال)",
+    "numberOfSlots": "عدد الأماكن",
+    "polygonsSection": "المضلعات",
+    "addPolygon": "إضافة مضلع",
+    "creating": "جاري الإنشاء...",
+    "createSite": "إنشاء الموقع",
+    "placeholders": {
+      "nameEn": "Enter site name in English",
+      "nameAr": "أدخل اسم الموقع بالعربية",
+      "integrationCode": "أدخل كود التكامل",
+      "pricePerHour": "أدخل السعر بالساعة",
+      "numberOfSlots": "أدخل عدد أماكن الركن"
+    },
+    "errors": {
+      "nameEnRequired": "الاسم (بالإنجليزية) مطلوب.",
+      "nameEnLength": "يجب أن يكون الاسم بين 3 و 100 حرف.",
+      "nameEnEnglishOnly": "يُسمح فقط بالأحرف الإنجليزية.",
+      "nameArRequired": "الاسم (بالعربية) مطلوب.",
+      "nameArLength": "يجب أن يكون الاسم بين 3 و 100 حرف.",
+      "nameArArabicOnly": "يُسمح فقط بالأحرف العربية.",
+      "integrationCodeRequired": "كود التكامل مطلوب.",
+      "integrationCodeLength": "يجب أن يكون كود التكامل بين 3 و 100 حرف.",
+      "integrationCodeFormat": "يقبل فقط الأحرف والأرقام والرموز [-, _, مسافة, .]",
+      "priceRequired": "يرجى إدخال صيغة صحيحة.",
+      "priceMin": "يجب أن يكون السعر 0 على الأقل.",
+      "priceDecimals": "يمكن أن يحتوي السعر على رقمين عشريين كحد أقصى.",
+      "slotsRequired": "يرجى إدخال صيغة صحيحة.",
+      "slotsInteger": "يجب أن يكون رقماً صحيحاً.",
+      "slotsMin": "يجب أن يكون مكان واحد على الأقل.",
+      "slotsMax": "الحد الأقصى 10,000 مكان.",
+      "polygonRequired": "مطلوب مضلع واحد على الأقل للمواقع النهائية."
+    }
+  },
+  "polygonForm": {
+    "polygon": "مضلع",
+    "polygonName": "اسم المضلع",
+    "coordinates": "الإحداثيات (3 كحد أدنى)",
+    "addPoint": "إضافة نقطة",
+    "placeholders": {
+      "polygonName": "أدخل اسم المضلع (مثال: المنطقة أ)",
+      "latitude": "خط العرض",
+      "longitude": "خط الطول"
+    },
+    "errors": {
+      "nameRequired": "اسم المضلع مطلوب.",
+      "nameLength": "يجب أن يكون اسم المضلع بين 3 و 100 حرف.",
+      "minCoordinates": "مطلوب 3 إحداثيات على الأقل لكل مضلع.",
+      "duplicateCoordinates": "لا يُسمح بالإحداثيات المكررة.",
+      "latitudeRequired": "مطلوب",
+      "latitudeInvalid": "غير صالح (-90 إلى 90)",
+      "latitudeDecimals": "6 أرقام عشرية كحد أقصى",
+      "longitudeRequired": "مطلوب",
+      "longitudeInvalid": "غير صالح (-180 إلى 180)",
+      "longitudeDecimals": "6 أرقام عشرية كحد أقصى"
+    }
+  },
+  "pagination": {
+    "showing": "عرض",
+    "of": "من",
+    "previous": "السابق",
+    "next": "التالي"
+  }
+}

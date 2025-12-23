@@ -6,3 +6,8 @@
   box-sizing: border-box;
   font-family: 'Arimo';
 }
+
+// RTL Support
+html[dir='rtl'] {
+  font-family: 'Arimo', 'Segoe UI', Tahoma, sans-serif;
+}

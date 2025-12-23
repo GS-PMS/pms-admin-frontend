@@ -2,15 +2,14 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map, of, catchError } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { Breadcrumb } from '../../../../shared/models/Breadcrumb';
 import { SiteService } from '../../../../shared/services/site.service';
 
-const ROOT_BREADCRUMB: Breadcrumb = { id: null, name: 'All sites' };
-
 @Component({
   selector: 'app-breadcrumbs',
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './breadcrumbs.html',
   styleUrl: './breadcrumbs.scss',
 })
@@ -18,30 +17,42 @@ export class Breadcrumbs {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private siteService = inject(SiteService);
+  private translate = inject(TranslateService);
 
-  private routeSiteId = toSignal(
-    this.route.paramMap.pipe(map(params => params.get('siteId'))),
-    { initialValue: null }
-  );
+  private routeSiteId = toSignal(this.route.paramMap.pipe(map((params) => params.get('siteId'))), {
+    initialValue: null,
+  });
 
   currentSiteId = computed(() => this.routeSiteId());
-  breadcrumbs = signal<Breadcrumb[]>([ROOT_BREADCRUMB]);
+  breadcrumbs = signal<Breadcrumb[]>([this.getRootBreadcrumb()]);
+
+  private getRootBreadcrumb(): Breadcrumb {
+    return { id: null, name: this.translate.instant('sites.allSites') };
+  }
 
   constructor() {
+    // Update root breadcrumb when language changes
+    this.translate.onLangChange.subscribe(() => {
+      const current = this.breadcrumbs();
+      if (current.length > 0 && current[0].id === null) {
+        this.breadcrumbs.set([this.getRootBreadcrumb(), ...current.slice(1)]);
+      }
+    });
+
     effect(() => {
       const siteId = this.currentSiteId();
       if (!siteId) {
-        this.breadcrumbs.set([ROOT_BREADCRUMB]);
+        this.breadcrumbs.set([this.getRootBreadcrumb()]);
         return;
       }
 
       this.siteService
         .getSiteAncestorsIds(siteId)
         .pipe(
-          map(ancestorIds => [ROOT_BREADCRUMB, ...ancestorIds]),
-          catchError(() => of([ROOT_BREADCRUMB]))
+          map((ancestorIds) => [this.getRootBreadcrumb(), ...ancestorIds]),
+          catchError(() => of([this.getRootBreadcrumb()]))
         )
-        .subscribe(breadcrumbs => {
+        .subscribe((breadcrumbs) => {
           this.breadcrumbs.set(breadcrumbs);
         });
     });
@@ -56,4 +67,3 @@ export class Breadcrumbs {
     }
   }
 }
-

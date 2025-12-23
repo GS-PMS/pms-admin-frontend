@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { FormValidators } from './validators/form-validators';
 import { SiteService } from '../../shared/services/site.service';
@@ -14,7 +15,7 @@ const MIN_POLYGONS_FOR_LEAF = 1;
 @Component({
   selector: 'app-create-site-form',
   standalone: true,
-  imports: [ReactiveFormsModule, PolygonForm],
+  imports: [ReactiveFormsModule, PolygonForm, TranslateModule],
   templateUrl: './create-site-form.html',
   styleUrl: './create-site-form.scss',
 })

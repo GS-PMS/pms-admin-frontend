@@ -1,9 +1,10 @@
 import { Component, input, output } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { Site } from '../../shared/models/site';
 
 @Component({
   selector: 'app-site-card',
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './site-card.html',
   styleUrl: './site-card.scss',
 })

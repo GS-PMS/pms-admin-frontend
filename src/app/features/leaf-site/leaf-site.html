@@ -8,41 +8,45 @@
       <div class="leaf-site__info">
         <h1 class="leaf-site__name">{{ site().name.en }}</h1>
         <p class="leaf-site__name-ar">{{ site().name.ar }}</p>
-        <span class="leaf-site__badge">Parking Area</span>
+        <span class="leaf-site__badge">{{ 'leafSite.parkingArea' | translate }}</span>
       </div>
     </div>
 
     <div class="leaf-site__details">
       <div class="leaf-site__detail">
         <p>
-          <strong>Integration code:</strong>
+          <strong>{{ 'leafSite.integrationCode' | translate }}</strong>
           <span id="integrationCode">{{ site().integrationCode }}</span>
         </p>
       </div>
 
       <div class="leaf-site__detail">
         <p>
-          <strong>Path:</strong> <span id="path">{{ site().path }}</span>
+          <strong>{{ 'leafSite.path' | translate }}</strong>
+          <span id="path">{{ site().path }}</span>
         </p>
       </div>
 
       <div class="leaf-site__detail">
         <p>
-          <strong>Price per hour:</strong>
-          <span id="pricePerHour">{{ site().pricePerHour }} SAR</span>
+          <strong>{{ 'leafSite.pricePerHour' | translate }}</strong>
+          <span id="pricePerHour"
+            >{{ site().pricePerHour }} {{ 'leafSite.currency' | translate }}</span
+          >
         </p>
       </div>
 
       <div class="leaf-site__detail">
         <p>
-          <strong>Number of slots:</strong>
+          <strong>{{ 'leafSite.numberOfSlots' | translate }}</strong>
           <span id="numberOfSlots">{{ site().numberOfSlots }}</span>
         </p>
       </div>
 
       <div class="leaf-site__detail">
         <p>
-          <strong>Polygons:</strong> <span id="numberOfPolygons">{{ polygons().length }}</span>
+          <strong>{{ 'leafSite.polygons' | translate }}</strong>
+          <span id="numberOfPolygons">{{ polygons().length }}</span>
         </p>
       </div>
     </div>

@@ -1,28 +1,29 @@
 <section class="create-site-form">
   <div class="create-site-form__header">
-    <h1 class="create-site-form__title">Create New Site</h1>
+    <h1 class="create-site-form__title">{{ 'createSiteForm.title' | translate }}</h1>
     <p class="create-site-form__subtitle">
-      Adding site under: <strong id="site-path">{{ currentPath }}</strong>
+      {{ 'createSiteForm.addingSiteUnder' | translate }}
+      <strong id="site-path">{{ currentPath }}</strong>
     </p>
   </div>
 
   @if (submitSuccess()) {
   <div class="form-alert form-alert--success" id="success-msg">
-    Site created successfully!
+    {{ 'createSiteForm.successMessage' | translate }}
     <button type="button" class="btn btn--primary btn--sm" id="nav-btn" (click)="navigateBack()">
-      Go to Sites
+      {{ 'createSiteForm.goToSites' | translate }}
     </button>
   </div>
   }
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="create-site-form__form">
     <div class="form-section">
-      <h2 class="form-section__title">Basic Information</h2>
+      <h2 class="form-section__title">{{ 'createSiteForm.basicInfo' | translate }}</h2>
 
       <div class="form-row">
         <div class="form-group">
           <label for="nameEn" class="form-label"
-            >Name (English) <span class="required">*</span></label
+            >{{ 'createSiteForm.nameEn' | translate }} <span class="required">*</span></label
           >
           <input
             type="text"
@@ -30,22 +31,24 @@
             formControlName="nameEn"
             class="form-input"
             [class.form-input--error]="isFieldInvalid('nameEn')"
-            placeholder="Enter site name in English"
+            [placeholder]="'createSiteForm.placeholders.nameEn' | translate"
           />
           @if (isFieldInvalid('nameEn')) {
           <span class="form-error" id="nameEn-error">
             @if (form.get('nameEn')?.errors?.['required'] ||
-            form.get('nameEn')?.errors?.['whitespaceOnly']) { Name (English) is required. } @else if
+            form.get('nameEn')?.errors?.['whitespaceOnly']) {
+            {{ 'createSiteForm.errors.nameEnRequired' | translate }} } @else if
             (form.get('nameEn')?.errors?.['minlength'] || form.get('nameEn')?.errors?.['maxlength'])
-            { Name must be between 3 and 100 characters. } @else if
-            (form.get('nameEn')?.errors?.['englishOnly']) { Only English characters are allowed. }
+            { {{ 'createSiteForm.errors.nameEnLength' | translate }} } @else if
+            (form.get('nameEn')?.errors?.['englishOnly']) {
+            {{ 'createSiteForm.errors.nameEnEnglishOnly' | translate }} }
           </span>
           }
         </div>
 
         <div class="form-group">
           <label for="nameAr" class="form-label"
-            >Name (Arabic) <span class="required">*</span></label
+            >{{ 'createSiteForm.nameAr' | translate }} <span class="required">*</span></label
           >
           <input
             type="text"
@@ -53,16 +56,18 @@
             formControlName="nameAr"
             class="form-input"
             [class.form-input--error]="isFieldInvalid('nameAr')"
-            placeholder="أدخل اسم الموقع بالعربية"
+            [placeholder]="'createSiteForm.placeholders.nameAr' | translate"
             dir="rtl"
           />
           @if (isFieldInvalid('nameAr')) {
           <span class="form-error" id="nameAr-error">
             @if (form.get('nameAr')?.errors?.['required'] ||
-            form.get('nameAr')?.errors?.['whitespaceOnly']) { Name (Arabic) is required. } @else if
+            form.get('nameAr')?.errors?.['whitespaceOnly']) {
+            {{ 'createSiteForm.errors.nameArRequired' | translate }} } @else if
             (form.get('nameAr')?.errors?.['minlength'] || form.get('nameAr')?.errors?.['maxlength'])
-            { Name must be between 3 and 100 characters. } @else if
-            (form.get('nameAr')?.errors?.['arabicOnly']) { Only Arabic characters are allowed. }
+            { {{ 'createSiteForm.errors.nameArLength' | translate }} } @else if
+            (form.get('nameAr')?.errors?.['arabicOnly']) {
+            {{ 'createSiteForm.errors.nameArArabicOnly' | translate }} }
           </span>
           }
         </div>
@@ -71,7 +76,8 @@
       <div class="form-row">
         <div class="form-group">
           <label for="integrationCode" class="form-label"
-            >Integration Code <span class="required">*</span></label
+            >{{ 'createSiteForm.integrationCode' | translate }}
+            <span class="required">*</span></label
           >
           <input
             type="text"
@@ -79,22 +85,24 @@
             formControlName="integrationCode"
             class="form-input"
             [class.form-input--error]="isFieldInvalid('integrationCode')"
-            placeholder="Enter integration code"
+            [placeholder]="'createSiteForm.placeholders.integrationCode' | translate"
           />
           @if (isFieldInvalid('integrationCode')) {
           <span class="form-error" id="integrationCode-error">
             @if (form.get('integrationCode')?.errors?.['required'] ||
-            form.get('integrationCode')?.errors?.['whitespaceOnly']) { Integration code is required.
-            } @else if (form.get('integrationCode')?.errors?.['minlength'] ||
-            form.get('integrationCode')?.errors?.['maxlength']) { Integration code must be between 3
-            and 100 characters. } @else if (form.get('integrationCode')?.errors?.['codeValidation'])
-            { Only accepts letters, numbers, and special characters [-, _, space, .] }
+            form.get('integrationCode')?.errors?.['whitespaceOnly']) {
+            {{ 'createSiteForm.errors.integrationCodeRequired' | translate }} } @else if
+            (form.get('integrationCode')?.errors?.['minlength'] ||
+            form.get('integrationCode')?.errors?.['maxlength']) {
+            {{ 'createSiteForm.errors.integrationCodeLength' | translate }} } @else if
+            (form.get('integrationCode')?.errors?.['codeValidation']) {
+            {{ 'createSiteForm.errors.integrationCodeFormat' | translate }} }
           </span>
           }
         </div>
 
         <div class="form-group">
-          <label for="path" class="form-label">Path</label>
+          <label for="path" class="form-label">{{ 'createSiteForm.path' | translate }}</label>
           <input
             type="text"
             id="path"
@@ -108,19 +116,19 @@
       <div class="form-group form-group--checkbox">
         <label class="checkbox-label">
           <input type="checkbox" formControlName="isLeaf" class="checkbox-input" id="isLeaf" />
-          <span class="checkbox-text">Is Leaf Site (Parking Area)</span>
+          <span class="checkbox-text">{{ 'createSiteForm.isLeafSite' | translate }}</span>
         </label>
       </div>
     </div>
 
     @if (form.get('isLeaf')?.value) {
     <div class="form-section form-section--leaf">
-      <h2 class="form-section__title">Parking Area Details</h2>
+      <h2 class="form-section__title">{{ 'createSiteForm.parkingDetails' | translate }}</h2>
 
       <div class="form-row">
         <div class="form-group">
           <label for="pricePerHour" class="form-label"
-            >Price per Hour (EGP) <span class="required">*</span></label
+            >{{ 'createSiteForm.pricePerHour' | translate }} <span class="required">*</span></label
           >
           <input
             type="number"
@@ -128,23 +136,25 @@
             formControlName="pricePerHour"
             class="form-input"
             [class.form-input--error]="isFieldInvalid('pricePerHour')"
-            placeholder="Enter price per hour"
+            [placeholder]="'createSiteForm.placeholders.pricePerHour' | translate"
             min="0"
             step="0.01"
           />
           @if (isFieldInvalid('pricePerHour')) {
           <span class="form-error" id="pricePerHour-error">
-            @if (form.get('pricePerHour')?.errors?.['required']) { Please enter a valid format. }
-            @else if (form.get('pricePerHour')?.errors?.['min']) { Price must be at least 0.
-            <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) { Price can have
-            up to 2 decimal places. }
+            @if (form.get('pricePerHour')?.errors?.['required']) {
+            {{ 'createSiteForm.errors.priceRequired' | translate }} } @else if
+            (form.get('pricePerHour')?.errors?.['min']) {
+            {{ 'createSiteForm.errors.priceMin' | translate }}
+            <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) {
+            {{ 'createSiteForm.errors.priceDecimals' | translate }} }
           </span>
           }
         </div>
 
         <div class="form-group">
           <label for="numberOfSlots" class="form-label"
-            >Number of Slots <span class="required">*</span></label
+            >{{ 'createSiteForm.numberOfSlots' | translate }} <span class="required">*</span></label
           >
           <input
             type="number"
@@ -152,17 +162,20 @@
             formControlName="numberOfSlots"
             class="form-input"
             [class.form-input--error]="isFieldInvalid('numberOfSlots')"
-            placeholder="Enter number of parking slots"
+            [placeholder]="'createSiteForm.placeholders.numberOfSlots' | translate"
             min="1"
             step="1"
           />
           @if (isFieldInvalid('numberOfSlots')) {
           <span class="form-error" id="numberOfSlots-error">
-            @if (form.get('numberOfSlots')?.errors?.['required']) { Please enter a valid format. }
-            @else if (form.get('numberOfSlots')?.errors?.['integer']) { Must be an integer number. }
-            @else if (form.get('numberOfSlots')?.errors?.['min']) { Must be at least 1 slot.
-            <!---->} @else if (form.get('numberOfSlots')?.errors?.['max']) { Maximum 10,000 slots
-            allowed. }
+            @if (form.get('numberOfSlots')?.errors?.['required']) {
+            {{ 'createSiteForm.errors.slotsRequired' | translate }} } @else if
+            (form.get('numberOfSlots')?.errors?.['integer']) {
+            {{ 'createSiteForm.errors.slotsInteger' | translate }} } @else if
+            (form.get('numberOfSlots')?.errors?.['min']) {
+            {{ 'createSiteForm.errors.slotsMin' | translate }}
+            <!---->} @else if (form.get('numberOfSlots')?.errors?.['max']) {
+            {{ 'createSiteForm.errors.slotsMax' | translate }} }
           </span>
           }
         </div>
@@ -170,16 +183,18 @@
 
       <div class="polygons-section">
         <div class="polygons-section__header">
-          <h3 class="polygons-section__title">Polygons <span class="required">*</span></h3>
+          <h3 class="polygons-section__title">
+            {{ 'createSiteForm.polygonsSection' | translate }} <span class="required">*</span>
+          </h3>
           <button type="button" class="btn btn--secondary btn--sm" (click)="addPolygon()">
-            Add Polygon
+            {{ 'createSiteForm.addPolygon' | translate }}
           </button>
         </div>
 
         @if (hasPolygonError()) {
-        <span class="form-error" id="polygon-error"
-          >At least 1 polygon is required for leaf sites.</span
-        >
+        <span class="form-error" id="polygon-error">{{
+          'createSiteForm.errors.polygonRequired' | translate
+        }}</span>
         }
 
         <div class="polygons-list" formArrayName="polygons">
@@ -211,10 +226,11 @@
         [disabled]="submitting()"
         id="cancel-btn"
       >
-        Cancel
+        {{ 'common.cancel' | translate }}
       </button>
       <button type="submit" class="btn btn--primary" [disabled]="submitting()" id="sub-btn">
-        @if (submitting()) { Creating... } @else { Create Site }
+        @if (submitting()) { {{ 'createSiteForm.creating' | translate }} } @else {
+        {{ 'createSiteForm.createSite' | translate }} }
       </button>
     </div>
   </form>

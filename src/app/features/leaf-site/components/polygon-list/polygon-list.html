@@ -1,6 +1,8 @@
 <div class="polygon-list" id="polygon-list-container">
   <div class="polygon-list__header">
-    <h2 class="polygon-list__title" id="polygon-list-title">Polygons</h2>
+    <h2 class="polygon-list__title" id="polygon-list-title">
+      {{ 'polygonList.title' | translate }}
+    </h2>
     <button
       type="button"
       class="polygon-list__btn polygon-list__btn--primary"
@@ -8,7 +10,7 @@
       (click)="toggleAddForm()"
       [disabled]="showAddForm()"
     >
-      Add Polygon
+      {{ 'polygonList.addPolygon' | translate }}
     </button>
   </div>
 
@@ -31,7 +33,7 @@
           (click)="cancelAdd()"
           [disabled]="isSubmitting()"
         >
-          Cancel
+          {{ 'common.cancel' | translate }}
         </button>
         <button
           type="submit"
@@ -39,14 +41,15 @@
           id="save-polygon-btn"
           [disabled]="isSubmitting()"
         >
-          @if (isSubmitting()) { Saving... } @else { Save Polygon }
+          @if (isSubmitting()) { {{ 'polygonList.saving' | translate }} } @else {
+          {{ 'polygonList.savePolygon' | translate }} }
         </button>
       </div>
     </form>
   </div>
   } @if (polygons().length === 0) {
   <div class="polygon-list__empty" id="polygon-list-empty">
-    <p>No polygons defined for this site</p>
+    <p>{{ 'polygonList.noPolygons' | translate }}</p>
   </div>
   } @else {
   <div class="polygon-list__items" id="polygon-list-items">
@@ -58,9 +61,9 @@
 
       <div class="polygon-item__details">
         <div class="polygon-item__detail">
-          <span class="polygon-item__label">Polygon Points:</span>
+          <span class="polygon-item__label">{{ 'polygonList.polygonPoints' | translate }}</span>
           <span class="polygon-item__value" [id]="'polygon-points-count-' + polyIndex"
-            >{{ polygon.polygonPoints.length }} points</span
+            >{{ polygon.polygonPoints.length }} {{ 'polygonList.points' | translate }}</span
           >
         </div>
       </div>
@@ -73,12 +76,12 @@
             <span
               class="polygonpoint-item__lat"
               [id]="'polygon-' + polyIndex + '-point-' + pointIndex + '-lat'"
-              >Lat: {{ coord.latitude.toFixed(6) }}</span
+              >{{ 'polygonList.lat' | translate }} {{ coord.latitude.toFixed(6) }}</span
             >
             <span
               class="polygonpoint-item__lng"
               [id]="'polygon-' + polyIndex + '-point-' + pointIndex + '-lng'"
-              >Lng: {{ coord.longitude.toFixed(6) }}</span
+              >{{ 'polygonList.lng' | translate }} {{ coord.longitude.toFixed(6) }}</span
             >
           </div>
           }

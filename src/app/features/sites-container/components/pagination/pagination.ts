@@ -1,11 +1,12 @@
 import { Component, computed, input, output } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 const ELLIPSIS_MARKER = -1;
 const MAX_VISIBLE_PAGES = 7;
 
 @Component({
   selector: 'app-pagination',
-  imports: [],
+  imports: [TranslateModule],
   templateUrl: './pagination.html',
   styleUrl: './pagination.scss',
 })

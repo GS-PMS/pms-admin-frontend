@@ -2,7 +2,7 @@
   <app-breadcrumbs />
 
   @if (loading()) {
-  <h1 class="sites__status">Loading…</h1>
+  <h1 class="sites__status">{{ 'common.loading' | translate }}</h1>
   } @else if (error()) {
   <h1 class="sites__status sites__status--error">{{ error() }}</h1>
   } @else if (viewMode() === 'leaf' && currentSite()) {
