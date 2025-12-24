@@ -1,17 +1,79 @@
 // ============================================
-// MAIN PIPELINE EXECUTION
+// COMPLETE JENKINS PIPELINE - SINGLE FILE
 // ============================================
+
 node {
-    // Load configuration
-    def config = load "${workspace}/.jenkins/jenkins-config.groovy"
+    // ============================================
+    // CONFIGURATION
+    // ============================================
+    def config = [
+        docker: [
+            credentialsId: 'dockerhub-credentials',
+            repo: 'salmawaleedd',
+            latestTag: 'latest'
+        ],
+        
+        application: [
+            name: 'pms-admin-frontend',
+            installCommand: 'npm ci',
+            buildCommand: 'npm run build',
+            containerPort: '80',
+            healthCheckPath: '/'
+        ],
+        
+        deployment: [
+            stackName: 'pms-admin',
+            composeServiceName: 'admin-frontend',
+            composeFile: 'docker-compose-admin.yml',
+            hostPort: '4200',
+            replicas: 2,
+            updateParallelism: 1,
+            updateDelay: '10s',
+            updateOrder: 'start-first'
+        ],
+        
+        pipeline: [
+            buildTimeout: 30,  // minutes
+            deployTimeout: 300, // seconds
+            healthCheckAttempts: 10,
+            healthCheckInterval: 5, // seconds
+            maxRetries: 2,
+            pruneImages: true
+        ],
+        
+        validation: [
+            minDiskSpace: 1,
+            requiredTools: ['docker', 'node', 'npm', 'git'],
+            blockDirectPushes: true
+        ]
+    ]
     
-    // Calculate derived values
-    def derived = calculateDerivedValues(config)
+    // ============================================
+    // DERIVED VALUES
+    // ============================================
+    def derived = [
+        imageTag: "${config.docker.repo}/${config.application.name}:${BUILD_NUMBER}",
+        latestTag: "${config.docker.repo}/${config.application.name}:latest",
+        swarmServiceName: "${config.deployment.stackName}_${config.deployment.composeServiceName}",
+        buildInfo: [
+            number: BUILD_NUMBER,
+            tag: BUILD_TAG,
+            url: BUILD_URL
+        ]
+    ]
     
+    // ============================================
+    // PIPELINE EXECUTION
+    // ============================================
     try {
-        executePipeline(config, derived)
+        timeout(time: config.pipeline.buildTimeout, unit: 'MINUTES') {
+            pipelineStages(config, derived)
+        }
+        currentBuild.result = 'SUCCESS'
     } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
         handleFailure(e, config, derived)
+        throw e
     } finally {
         cleanup(config)
         displaySummary(currentBuild.result, config, derived)
@@ -19,53 +81,73 @@ node {
 }
 
 // ============================================
-// HELPER FUNCTIONS
-// ============================================
-
-def calculateDerivedValues(config) {
-    return [
-        // Docker image tags
-        imageTag: "${config.docker.repo}/${config.application.name}:${BUILD_NUMBER}",
-        latestTag: "${config.docker.repo}/${config.application.name}:latest",
-        
-        // Service names
-        swarmServiceName: "${config.deployment.stackName}_${config.deployment.composeServiceName}",
-        
-        // Build info
-        buildInfo: [
-            number: BUILD_NUMBER,
-            tag: BUILD_TAG,
-            url: BUILD_URL
-        ]
-    ]
-}
-
-// ============================================
 // PIPELINE STAGES
 // ============================================
 
-def executePipeline(config, derived) {
-    timeout(time: config.pipeline.buildTimeout, unit: 'MINUTES') {
-        stage('🚨 Validate Git Workflow') { validateGitWorkflow(config) }
-        stage('🔧 Environment Check') { environmentCheck(config) }
-        stage('📥 Checkout Code') { checkoutCode() }
-        stage('📦 Install Dependencies') { installDependencies(config) }
-        stage('🏗️ Build Application') { buildApplication(config) }
-        stage('🐳 Build Docker Image') { buildDockerImage(config, derived) }
-        stage('📤 Push to Docker Hub') { pushToDockerHub(config, derived) }
-        stage('📋 Prepare Deployment') { prepareDeployment(config, derived) }
-        stage('🚀 Deploy to Swarm') { deployToSwarm(config, derived) }
-        stage('🔍 Verify Deployment') { verifyDeployment(config, derived) }
-        stage('🏥 Health Check') { performHealthCheck(config, derived) }
-        stage('📊 Final Status') { displayFinalStatus(config, derived) }
+def pipelineStages(config, derived) {
+    stage('🚨 Validate Git Workflow') {
+        validateGitWorkflow(config)
+    }
+    
+    stage('🔧 Environment Check') {
+        environmentCheck(config)
+    }
+    
+    stage('📥 Checkout Code') {
+        checkoutCode()
+    }
+    
+    stage('📦 Install Dependencies') {
+        installDependencies(config)
+    }
+    
+    stage('🏗️ Build Application') {
+        buildApplication(config)
+    }
+    
+    stage('🐳 Build Docker Image') {
+        buildDockerImage(config, derived)
+    }
+    
+    stage('📤 Push to Docker Hub') {
+        pushToDockerHub(config, derived)
+    }
+    
+    stage('📋 Prepare Deployment') {
+        prepareDeployment(config, derived)
+    }
+    
+    stage('🚀 Deploy to Swarm') {
+        deployToSwarm(config, derived)
+    }
+    
+    stage('🔍 Verify Deployment') {
+        verifyDeployment(config, derived)
+    }
+    
+    stage('🏥 Health Check') {
+        performHealthCheck(config, derived)
+    }
+    
+    stage('📊 Final Status') {
+        displayFinalStatus(config, derived)
     }
 }
+
+// ============================================
+// STAGE IMPLEMENTATIONS
+// ============================================
 
 def validateGitWorkflow(config) {
     if (!config.validation.blockDirectPushes) {
         echo "⚠️ Direct push validation is disabled"
         return
     }
+    
+    echo "Validating Git workflow"
+    
+    // First, checkout the code to get git info
+    checkout scm
     
     def isMerge = sh(
         script: "git rev-parse HEAD^2 >/dev/null 2>&1 && echo true || echo false",
@@ -162,6 +244,7 @@ def pushToDockerHub(config, derived) {
             docker login -u \${DOCKER_USER} -p \${DOCKER_PASS}
             docker push ${derived.imageTag}
             docker push ${derived.latestTag}
+            docker logout
         """
     }
     
@@ -197,13 +280,14 @@ def deployToSwarm(config, derived) {
     
     // Ensure Swarm is active
     def swarmStatus = sh(
-        script: "docker info --format '{{.Swarm.LocalNodeState}}'",
+        script: "docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo 'inactive'",
         returnStdout: true
     ).trim()
     
     if (swarmStatus != 'active') {
         echo "Initializing Docker Swarm"
-        sh "docker swarm init --advertise-addr 127.0.0.1"
+        sh "docker swarm init --advertise-addr 127.0.0.1 2>/dev/null || true"
+        sleep 3
     }
     
     // Deploy stack
@@ -215,6 +299,7 @@ def deployToSwarm(config, derived) {
         sh """
             docker login -u \${DOCKER_USER} -p \${DOCKER_PASS}
             docker stack deploy -c ${config.deployment.composeFile} ${config.deployment.stackName} --with-registry-auth
+            docker logout
         """
     }
     
@@ -225,26 +310,41 @@ def deployToSwarm(config, derived) {
 
 def verifyDeployment(config, derived) {
     echo "Verifying deployment"
-    sleep 5
+    sleep 10
     
-    retry(config.pipeline.maxRetries) {
-        sh """
-            echo "📊 Deployment Status"
-            echo "===================="
-            docker stack services ${config.deployment.stackName}
-            
-            echo ""
-            echo "📈 Service Details"
-            echo "=================="
-            docker service inspect ${derived.swarmServiceName} --format '
+    // Retry verification
+    def maxRetries = config.pipeline.maxRetries
+    def verified = false
+    
+    for (int i = 0; i < maxRetries && !verified; i++) {
+        try {
+            sh """
+                echo "📊 Deployment Status - Attempt ${i + 1}/${maxRetries}"
+                echo "=================================="
+                docker stack services ${config.deployment.stackName}
+                
+                echo ""
+                echo "📈 Service Details"
+                echo "=================="
+                docker service inspect ${derived.swarmServiceName} --format '
 Name:    {{.Spec.Name}}
 Image:   {{.Spec.TaskTemplate.ContainerSpec.Image}}
 Status:  {{.UpdateStatus.State}}
-Replicas: {{.Spec.Mode.Replicated.Replicas}} desired, {{.Mode}} mode
+Replicas: {{.Spec.Mode.Replicated.Replicas}} desired
 Port:    {{range .Endpoint.Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
-Created: {{.CreatedAt}}
-            '
-        """
+                '
+            """
+            verified = true
+        } catch (Exception e) {
+            echo "⚠️ Verification attempt ${i + 1} failed: ${e.message}"
+            if (i < maxRetries - 1) {
+                sleep 5
+            }
+        }
+    }
+    
+    if (!verified) {
+        error "Failed to verify deployment after ${maxRetries} attempts"
     }
     
     echo "✅ Deployment verified"
@@ -273,18 +373,29 @@ def performHealthCheck(config, derived) {
                 echo "✅ Health check passed (HTTP ${statusCode})"
                 healthCheckPassed = true
                 break
+            } else {
+                echo "⏳ Got HTTP ${statusCode}, retrying in ${config.pipeline.healthCheckInterval}s..."
             }
         } catch (Exception e) {
-            echo "⏳ Connection attempt ${attempt} failed"
+            echo "⏳ Connection attempt ${attempt} failed: ${e.message}"
         }
         
         sleep config.pipeline.healthCheckInterval
     }
     
     if (!healthCheckPassed) {
-        echo "⚠️  Health check inconclusive"
-        sh "docker service logs ${derived.swarmServiceName} --tail 5"
-        echo "⚠️  Manual verification recommended"
+        echo "⚠️ Health check inconclusive"
+        sh """
+            echo "📋 Checking container status..."
+            docker service ps ${derived.swarmServiceName} --no-trunc || echo "Could not get service status"
+            
+            echo ""
+            echo "📜 Recent logs:"
+            docker service logs ${derived.swarmServiceName} --tail 5 2>/dev/null || echo "Could not get logs"
+        """
+        echo "⚠️ Manual verification recommended at http://localhost:${config.deployment.hostPort}"
+    } else {
+        echo "✅ Health check completed successfully"
     }
 }
 
@@ -321,8 +432,6 @@ def displayFinalStatus(config, derived) {
 // ============================================
 
 def handleFailure(Exception e, config, derived) {
-    currentBuild.result = 'FAILURE'
-    
     echo """
     ❌ PIPELINE FAILED
     =================
@@ -349,10 +458,8 @@ def handleFailure(Exception e, config, derived) {
             docker service logs ${derived.swarmServiceName} --tail 10 2>/dev/null || echo "Could not get logs"
         """
     } catch (Exception ex) {
-        echo "⚠️  Could not collect debug info: ${ex.message}"
+        echo "⚠️ Could not collect debug info: ${ex.message}"
     }
-    
-    throw e
 }
 
 def cleanup(config) {
