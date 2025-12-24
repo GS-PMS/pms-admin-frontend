@@ -66,9 +66,9 @@ pipeline {
                     
                     echo "✅ All required tools available"
                     
-                    FREE_SPACE=$(df -h . | awk 'NR==2 {print $4}' | sed 's/G//')
-                    if [ $FREE_SPACE -lt 1 ]; then
-                        echo "⚠️  Low disk space: ${FREE_SPACE}G free"
+                    FREE_SPACE=\$(df -h . | awk 'NR==2 {print \$4}' | sed 's/G//')
+                    if [ \$FREE_SPACE -lt 1 ]; then
+                        echo "⚠️  Low disk space: \${FREE_SPACE}G free"
                     fi
                 '''
                 
@@ -101,7 +101,15 @@ pipeline {
             sh 'npm ci'
             
             echo "✅ Dependencies installed successfully"
-            echo "📊 Node modules size: $(du -sh node_modules | cut -f1)"
+            
+            script {
+                def nodeModulesSize = sh(
+                    script: 'du -sh node_modules | cut -f1',
+                    returnStdout: true
+                ).trim()
+                
+                echo "📊 Node modules size: ${nodeModulesSize}"
+            }
         }
     }
 
@@ -115,7 +123,15 @@ pipeline {
             sh 'npm run build'
             
             echo "✅ Angular build completed"
-            echo "📊 Build output size: $(du -sh dist/ | cut -f1)"
+            
+            script {
+                def buildSize = sh(
+                    script: 'du -sh dist/ | cut -f1',
+                    returnStdout: true
+                ).trim()
+                
+                echo "📊 Build output size: ${buildSize}"
+            }
         }
     }
 
@@ -153,7 +169,7 @@ pipeline {
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
                     sh """
-                        echo "🔐 Logging in to Docker Hub as ${DOCKER_USER}"
+                        echo "🔐 Logging in to Docker Hub as \${DOCKER_USER}"
                         echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
                         
                         echo "📤 Pushing image with build tag..."
@@ -336,12 +352,12 @@ pipeline {
                         🔧 MANUAL CREATION REQUIRED:
                         
                         OPTION 1: Create compose file and deploy:
-                        echo 'version: \"3.8\"
+                        echo 'version: "3.8"
                         services:
                           ${SWARM_SERVICE_NAME}:
                             image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
                             ports:
-                              - \"${HEALTH_CHECK_PORT}:80\"
+                              - "${HEALTH_CHECK_PORT}:80"
                             deploy:
                               replicas: 2' > ${COMPOSE_FILE}
                         
@@ -642,8 +658,8 @@ Ports:    {{.Ports}}
                 sh """
                     echo "🎯 FINAL SERVICE STATUS:"
                     docker service ls --filter name=${SWARM_SERVICE_NAME} --format '
-Service: {{.Name}}
-Image:   {{.Image}}
+Name:     {{.Name}}
+Image:    {{.Image}}
 Replicas: {{.Replicas}}
 Port:    {{range .Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
                     '
