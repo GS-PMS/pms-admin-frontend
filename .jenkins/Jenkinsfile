@@ -3,7 +3,7 @@
 // ============================================
 node {
     // Load configuration
-    def config = load '.jenkins/jenkins-config.groovy'
+    def config = load "${workspace}/.jenkins/jenkins-config.groovy"
     
     // Calculate derived values
     def derived = calculateDerivedValues(config)
