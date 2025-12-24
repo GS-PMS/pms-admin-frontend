@@ -59,7 +59,7 @@
     "path": "Path",
     "isLeafSite": "Is Leaf Site (Parking Area)",
     "parkingDetails": "Parking Area Details",
-    "pricePerHour": "Price per Hour (EGP)",
+    "pricePerHour": "Price per Hour (SAR)",
     "numberOfSlots": "Number of Slots",
     "polygonsSection": "Polygons",
     "addPolygon": "Add Polygon",
