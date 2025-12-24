@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Site } from '../../shared/models/site';
 import { SiteService } from '../../shared/services/site.service';
@@ -11,7 +12,7 @@ import { LeafSite } from '../leaf-site/leaf-site';
 
 @Component({
   selector: 'app-sites-container',
-  imports: [Breadcrumbs, SitesGrid, LeafSite],
+  imports: [Breadcrumbs, SitesGrid, LeafSite, TranslateModule],
   templateUrl: './sites-container.html',
   styleUrl: './sites-container.scss',
 })

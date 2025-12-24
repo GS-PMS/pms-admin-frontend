@@ -2,6 +2,7 @@ import { Component, computed, effect, inject, input, output, signal } from '@ang
 import { ActivatedRoute, Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Site } from '../../../../shared/models/site';
 import { SiteService } from '../../../../shared/services/site.service';
@@ -13,7 +14,7 @@ const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-sites-grid',
-  imports: [SiteCard, Pagination],
+  imports: [SiteCard, Pagination, TranslateModule],
   templateUrl: './sites-grid.html',
   styleUrl: './sites-grid.scss',
 })

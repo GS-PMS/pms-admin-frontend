@@ -1,0 +1,124 @@
+{
+  "header": {
+    "title": "Parking Management System",
+    "subtitle": "Manage your parking efficiently",
+    "langButton": "العربية"
+  },
+  "common": {
+    "loading": "Loading…",
+    "cancel": "Cancel",
+    "save": "Save",
+    "remove": "Remove",
+    "required": "Required",
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "Showing",
+    "of": "of"
+  },
+  "sites": {
+    "allSites": "All sites",
+    "addSite": "Add Site",
+    "loadingSites": "Loading sites…",
+    "noSitesFound": "No sites found at this level.",
+    "subsites": "subsites",
+    "integrationCode": "Integration Code",
+    "parkingArea": "Parking Area"
+  },
+  "siteCard": {
+    "integrationCode": "Integration Code"
+  },
+  "leafSite": {
+    "parkingArea": "Parking Area",
+    "integrationCode": "Integration code:",
+    "path": "Path:",
+    "pricePerHour": "Price per hour:",
+    "numberOfSlots": "Number of slots:",
+    "polygons": "Polygons:",
+    "currency": "SAR"
+  },
+  "polygonList": {
+    "title": "Polygons",
+    "addPolygon": "Add Polygon",
+    "noPolygons": "No polygons defined for this site",
+    "polygonPoints": "Polygon Points:",
+    "points": "points",
+    "lat": "Lat:",
+    "lng": "Lng:",
+    "saving": "Saving...",
+    "savePolygon": "Save Polygon"
+  },
+  "createSiteForm": {
+    "title": "Create New Site",
+    "addingSiteUnder": "Adding site under:",
+    "successMessage": "Site created successfully!",
+    "goToSites": "Go to Sites",
+    "basicInfo": "Basic Information",
+    "nameEn": "Name (English)",
+    "nameAr": "Name (Arabic)",
+    "integrationCode": "Integration Code",
+    "path": "Path",
+    "isLeafSite": "Is Leaf Site (Parking Area)",
+    "parkingDetails": "Parking Area Details",
+    "pricePerHour": "Price per Hour (EGP)",
+    "numberOfSlots": "Number of Slots",
+    "polygonsSection": "Polygons",
+    "addPolygon": "Add Polygon",
+    "creating": "Creating...",
+    "createSite": "Create Site",
+    "placeholders": {
+      "nameEn": "Enter site name in English",
+      "nameAr": "أدخل اسم الموقع بالعربية",
+      "integrationCode": "Enter integration code",
+      "pricePerHour": "Enter price per hour",
+      "numberOfSlots": "Enter number of parking slots"
+    },
+    "errors": {
+      "nameEnRequired": "Name (English) is required.",
+      "nameEnLength": "Name must be between 3 and 100 characters.",
+      "nameEnEnglishOnly": "Only English characters are allowed.",
+      "nameArRequired": "Name (Arabic) is required.",
+      "nameArLength": "Name must be between 3 and 100 characters.",
+      "nameArArabicOnly": "Only Arabic characters are allowed.",
+      "integrationCodeRequired": "Integration code is required.",
+      "integrationCodeLength": "Integration code must be between 3 and 100 characters.",
+      "integrationCodeFormat": "Only accepts letters, numbers, and special characters [-, _, space, .]",
+      "priceRequired": "Please enter a valid format.",
+      "priceMin": "Price must be at least 0.",
+      "priceDecimals": "Price can have up to 2 decimal places.",
+      "slotsRequired": "Please enter a valid format.",
+      "slotsInteger": "Must be an integer number.",
+      "slotsMin": "Must be at least 1 slot.",
+      "slotsMax": "Maximum 10,000 slots allowed.",
+      "polygonRequired": "At least 1 polygon is required for leaf sites."
+    }
+  },
+  "polygonForm": {
+    "polygon": "Polygon",
+    "polygonName": "Polygon Name",
+    "coordinates": "Coordinates (min 3)",
+    "addPoint": "Add Point",
+    "placeholders": {
+      "polygonName": "Enter polygon name (e.g., Zone A)",
+      "latitude": "Latitude",
+      "longitude": "Longitude"
+    },
+    "errors": {
+      "nameRequired": "Polygon name is required.",
+      "nameLength": "Polygon name must be between 3 and 100 characters.",
+      "minCoordinates": "At least 3 coordinates are required per polygon.",
+      "duplicateCoordinates": "Duplicate coordinates are not allowed.",
+      "latitudeRequired": "Required",
+      "latitudeInvalid": "Invalid (-90 to 90)",
+      "latitudeDecimals": "Max 6 decimals",
+      "longitudeRequired": "Required",
+      "longitudeInvalid": "Invalid (-180 to 180)",
+      "longitudeDecimals": "Max 6 decimals"
+    }
+  },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "previous": "Previous",
+    "next": "Next"
+  }
+}

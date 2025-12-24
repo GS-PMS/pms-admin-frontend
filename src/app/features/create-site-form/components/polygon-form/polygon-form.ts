@@ -1,5 +1,6 @@
 import { Component, inject, input, output } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { FormValidators } from '../../validators/form-validators';
 
@@ -8,7 +9,7 @@ const MIN_COORDINATES_PER_POLYGON = 3;
 @Component({
   selector: 'app-polygon-form',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslateModule],
   templateUrl: './polygon-form.html',
   styleUrl: './polygon-form.scss',
 })
