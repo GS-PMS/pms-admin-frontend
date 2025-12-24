@@ -1,469 +1,402 @@
+// ============================================
+// MAIN PIPELINE EXECUTION
+// ============================================
 node {
-    // Define environment variables
-    env.DOCKER_HUB_REPO = 'salmawaleedd'
-    env.SERVICE_NAME = 'pms-admin-frontend'
-    env.IMAGE_TAG = "${BUILD_NUMBER}"
-    env.COMPOSE_FILE = 'docker-compose-admin.yml'
-    env.STACK_NAME = 'pms-admin'  // Stack name from docker-compose deployment
-    env.COMPOSE_SERVICE_NAME = 'admin-frontend'  // Service name in docker-compose file
-    env.HEALTH_CHECK_PORT = '4200'  // Health check port
+    // Load configuration
+    def config = load '.jenkins/jenkins-config.groovy'
     
-    // This will hold the actual service name in Docker Swarm (with stack prefix)
-    env.ACTUAL_SERVICE_NAME = "${env.STACK_NAME}_${env.COMPOSE_SERVICE_NAME}"
+    // Calculate derived values
+    def derived = calculateDerivedValues(config)
     
     try {
-        // ============================================
-        // STAGE 1: VALIDATE PUSH METHOD
-        // ============================================
-        stage('🚨 Validate Push Method') {
-            echo "=== Validating Git workflow ==="
-            
-            def isMerge = sh(
-                script: "git rev-parse HEAD^2 >/dev/null 2>&1 && echo true || echo false",
-                returnStdout: true
-            ).trim()
-
-            def committer = sh(
-                script: "git log -1 --pretty=format:%cn",
-                returnStdout: true
-            ).trim()
-
-            if (isMerge == "false") {
-                error """
-                ❌❌❌ DIRECT PUSH TO MAIN BLOCKED ❌❌❌
-                Commit ${env.GIT_COMMIT} by ${committer} is a direct commit to main.
-                
-                📋 REQUIRED WORKFLOW:
-                1. Create feature branch: git checkout -b feature/your-feature
-                2. Make changes and commit
-                3. Create Pull Request to main
-                4. Get code review approval
-                5. Merge via PR (creates merge commit)
-                """
-            } else {
-                echo "✅ Merge commit detected — committer: ${committer}"
-                echo "✅ PR workflow followed correctly"
-            }
-        }
-
-        // ============================================
-        // STAGE 2: ENVIRONMENT CHECK
-        // ============================================
-        stage('🔧 Environment Check') {
-            echo "=== Checking build environment ==="
-            
-            sh '''
-                echo "📦 Required tools:"
-                docker --version || { echo "❌ Docker not found"; exit 1; }
-                docker-compose --version || { echo "⚠️ docker-compose not found"; }
-                node --version || { echo "❌ Node.js not found"; exit 1; }
-                npm --version || { echo "❌ npm not found"; exit 1; }
-                git --version || { echo "❌ Git not found"; exit 1; }
-                
-                echo "✅ All required tools available"
-            '''
-            
-            echo "✅ Environment check passed"
-        }
-
-        // ============================================
-        // STAGE 3: CHECKOUT CODE
-        // ============================================
-        stage('📥 Checkout Code') {
-            echo "=== Checking out ${SERVICE_NAME} ==="
-            checkout scm
-            
-            echo "✅ Repository: ${env.GIT_URL}"
-            echo "✅ Branch: ${env.GIT_BRANCH}"
-            echo "✅ Commit: ${env.GIT_COMMIT}"
-        }
-
-        // ============================================
-        // STAGE 4: INSTALL DEPENDENCIES
-        // ============================================
-        stage('📦 Install Dependencies') {
-            echo "=== Installing npm dependencies ==="
-            
-            sh 'npm ci'
-            
-            echo "✅ Dependencies installed successfully"
-        }
-
-        // ============================================
-        // STAGE 5: BUILD APPLICATION
-        // ============================================
-        stage('🏗️ Build Application') {
-            echo "=== Building ${SERVICE_NAME} ==="
-            
-            sh 'npm run build'
-            
-            echo "✅ Angular build completed"
-        }
-
-        // ============================================
-        // STAGE 6: BUILD DOCKER IMAGE
-        // ============================================
-        stage('🐳 Build Docker Image') {
-            echo "=== Building Docker image ==="
-            
-            sh """
-                docker build -t ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG} .
-                docker tag ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG} ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-            """
-            
-            echo "✅ Docker image built successfully"
-            echo "📦 Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
-            echo "📦 Also tagged as: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest"
-        }
-
-        // ============================================
-        // STAGE 7: PUSH TO DOCKER HUB
-        // ============================================
-        stage('📤 Push to Docker Hub') {
-            echo "=== Pushing to Docker Hub ==="
-            
-            withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-credentials',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
-                sh """
-                    echo "🔐 Logging in to Docker Hub as \${DOCKER_USER}"
-                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                    
-                    echo "📤 Pushing image with build tag..."
-                    docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
-                    
-                    echo "📤 Pushing 'latest' tag..."
-                    docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                """
-            }
-            
-            echo "✅ Images pushed to Docker Hub successfully"
-        }
-
-        // ============================================
-        // STAGE 8: PREPARE DOCKER COMPOSE FILE
-        // ============================================
-        stage('📋 Prepare Docker Compose') {
-            echo "=== Preparing Docker Compose file ==="
-            
-            // Check if docker-compose file exists
-            def composeExists = sh(
-                script: "test -f ${COMPOSE_FILE} && echo 'exists' || echo 'not-found'",
-                returnStdout: true
-            ).trim()
-            
-            if (composeExists == 'exists') {
-                echo "✅ Docker compose file exists: ${COMPOSE_FILE}"
-                // Display current content
-                sh "cat ${COMPOSE_FILE}"
-                
-                // Extract current port from compose file if available
-                def currentPort = sh(
-                    script: """
-                        grep -oP 'ports:\\s*-\\s*\"\\K[0-9]+(?=:)' ${COMPOSE_FILE} | head -1 || echo '${HEALTH_CHECK_PORT}'
-                    """,
-                    returnStdout: true
-                ).trim()
-                
-                if (currentPort && currentPort != HEALTH_CHECK_PORT) {
-                    echo "ℹ️  Using port from compose file: ${currentPort}"
-                    env.HEALTH_CHECK_PORT = currentPort
-                }
-            } else {
-                echo "📝 Creating docker-compose file..."
-                sh """
-                    cat > ${COMPOSE_FILE} << 'EOF'
-                    version: '3.8'
-                    services:
-                      ${COMPOSE_SERVICE_NAME}:
-                        image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                        ports:
-                          - "${HEALTH_CHECK_PORT}:80"
-                        deploy:
-                          replicas: 2
-                          restart_policy:
-                            condition: on-failure
-                          update_config:
-                            parallelism: 1
-                            delay: 10s
-                            order: start-first
-                EOF
-                """
-                echo "✅ Created ${COMPOSE_FILE}"
-                sh "cat ${COMPOSE_FILE}"
-            }
-            
-            // Update the image tag in the compose file to use the new build
-            echo "🔄 Updating image tag in compose file..."
-            sh """
-                sed -i "s|image:.*${SERVICE_NAME}.*|image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}|g" ${COMPOSE_FILE}
-            """
-            
-            echo "📋 Updated compose file content:"
-            sh "cat ${COMPOSE_FILE}"
-            
-            echo "✅ Docker compose file prepared"
-            echo "🔌 Health check port: ${HEALTH_CHECK_PORT}"
-        }
-
-        // ============================================
-        // STAGE 9: DEPLOY TO DOCKER SWARM
-        // ============================================
-        stage('🚀 Deploy to Docker Swarm') {
-            echo "=== Deploying to Docker Swarm ==="
-            
-            // 1. Initialize Swarm if needed
-            def swarmStatus = sh(
-                script: "docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo 'inactive'",
-                returnStdout: true
-            ).trim()
-            
-            if (swarmStatus != 'active') {
-                echo "🔄 Initializing Docker Swarm..."
-                sh "docker swarm init --advertise-addr 127.0.0.1 2>/dev/null || true"
-                sleep 3
-                echo "✅ Docker Swarm initialized"
-            } else {
-                echo "✅ Docker Swarm is active"
-            }
-            
-            // 2. Deploy/Update the stack
-            echo "📦 Deploying stack: ${STACK_NAME}"
-            
-            withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-credentials',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )]) {
-                sh """
-                    echo "🔐 Logging in to Docker Hub for registry auth"
-                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
-                    
-                    echo "🚀 Deploying stack..."
-                    docker stack deploy -c ${COMPOSE_FILE} ${STACK_NAME} --with-registry-auth
-                    
-                    echo "🚪 Logging out from Docker Hub"
-                    docker logout
-                """
-            }
-            
-            echo "✅ Stack deployment initiated"
-            echo "📊 The service will be named: ${ACTUAL_SERVICE_NAME}"
-            echo "🔌 Service will be available on port: ${HEALTH_CHECK_PORT}"
-        }
-
-        // ============================================
-        // STAGE 10: VERIFY DEPLOYMENT
-        // ============================================
-        stage('🔍 Verify Deployment') {
-            echo "=== Verifying deployment ==="
-            
-            // Wait a bit for containers to start
-            sleep 10
-            
-            echo "📋 Checking stack status..."
-            sh """
-                echo "Stack: ${STACK_NAME}"
-                docker stack ls
-                echo ""
-                echo "Services in stack:"
-                docker stack services ${STACK_NAME}
-                echo ""
-                echo "Tasks (containers):"
-                docker stack ps ${STACK_NAME}
-            """
-            
-            // Check specific service
-            echo "🔍 Checking service: ${ACTUAL_SERVICE_NAME}"
-            def serviceExists = sh(
-                script: "docker service ls --filter name=${ACTUAL_SERVICE_NAME} --format '{{.Name}}' 2>/dev/null || echo ''",
-                returnStdout: true
-            ).trim()
-            
-            if (serviceExists) {
-                echo "✅ Service found: ${serviceExists}"
-                
-                // Get service details
-                sh """
-                    echo "📊 Service details:"
-                    docker service inspect ${ACTUAL_SERVICE_NAME} --format '
-Name:       {{.Spec.Name}}
-Image:      {{.Spec.TaskTemplate.ContainerSpec.Image}}
-Replicas:   {{.Spec.Mode.Replicated.Replicas}}
-Ports:      {{range .Endpoint.Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
-                    '
-                    
-                    echo ""
-                    echo "📈 Current state:"
-                    docker service ps ${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' --no-trunc
-                """
-                
-                // Get actual published port
-                def actualPublishedPort = sh(
-                    script: """
-                        docker service inspect ${ACTUAL_SERVICE_NAME} \
-                            --format '{{(index .Endpoint.Ports 0).PublishedPort}}' 2>/dev/null || echo '${HEALTH_CHECK_PORT}'
-                    """,
-                    returnStdout: true
-                ).trim()
-                
-                if (actualPublishedPort != HEALTH_CHECK_PORT) {
-                    echo "ℹ️  Actual published port is: ${actualPublishedPort}"
-                    env.HEALTH_CHECK_PORT = actualPublishedPort
-                }
-            } else {
-                echo "⚠️  Service not found with exact name, listing all services..."
-                sh "docker service ls --format 'table {{.Name}}\\t{{.Image}}\\t{{.Replicas}}'"
-                
-                // Try to find service with similar name
-                def similarService = sh(
-                    script: "docker service ls --format '{{.Name}}' | grep -i 'admin\\|frontend' | head -1 || echo ''",
-                    returnStdout: true
-                ).trim()
-                
-                if (similarService) {
-                    echo "ℹ️  Found similar service: ${similarService}"
-                    env.ACTUAL_SERVICE_NAME = similarService
-                }
-            }
-            
-            echo "✅ Verification completed"
-            echo "🔌 Health check port: ${HEALTH_CHECK_PORT}"
-        }
-
-        // ============================================
-        // STAGE 11: HEALTH CHECK
-        // ============================================
-        stage('🏥 Health Check') {
-            echo "=== Performing health check ==="
-            echo "🔌 Testing service on port: ${HEALTH_CHECK_PORT}"
-            
-            def healthCheckPassed = false
-            def maxAttempts = 10
-            
-            for (int attempt = 1; attempt <= maxAttempts; attempt++) {
-                echo "🩺 Health check attempt ${attempt}/${maxAttempts}"
-                
-                try {
-                    def statusCode = sh(
-                        script: """
-                            curl -s -o /dev/null -w '%{http_code}' \
-                                --max-time 10 \
-                                http://localhost:${HEALTH_CHECK_PORT} || echo '000'
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    
-                    if (statusCode == '200' || statusCode.startsWith('2')) {
-                        echo "✅ Health check PASSED (HTTP ${statusCode})"
-                        healthCheckPassed = true
-                        break
-                    } else {
-                        echo "⏳ Got HTTP ${statusCode}, retrying in 5s..."
-                    }
-                } catch (Exception e) {
-                    echo "⏳ Connection failed, retrying in 5s..."
-                }
-                
-                sleep 5
-            }
-            
-            if (healthCheckPassed) {
-                echo "✅ Service is healthy and responding on port ${HEALTH_CHECK_PORT}"
-            } else {
-                echo "⚠️  Health check failed or inconclusive on port ${HEALTH_CHECK_PORT}"
-                echo "📋 Checking container logs..."
-                sh """
-                    docker service logs ${ACTUAL_SERVICE_NAME} --tail 10 2>/dev/null || echo "Could not retrieve logs"
-                """
-                // Don't fail the pipeline for health check
-                echo "⚠️  Manual verification required at http://localhost:${HEALTH_CHECK_PORT}"
-            }
-        }
-
-        // ============================================
-        // STAGE 12: FINAL STATUS
-        // ============================================
-        stage('📊 Final Status') {
-            echo "=== Deployment Summary ==="
-            
-            // Get final service details
-            sh """
-                echo "🎯 DEPLOYMENT COMPLETE"
-                echo ""
-                echo "📋 Stack: ${STACK_NAME}"
-                echo "🐳 Service: ${ACTUAL_SERVICE_NAME}"
-                echo "📦 Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
-                echo "🔢 Build: ${IMAGE_TAG}"
-                echo "🔌 Port: ${HEALTH_CHECK_PORT}"
-                echo ""
-                echo "📊 Current status:"
-                docker service ls --filter name=${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.Image}}\\t{{.Replicas}}\\t{{.Ports}}'
-                echo ""
-                echo "🐋 Running containers:"
-                docker service ps ${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' --filter 'desired-state=running'
-            """
-            
-            echo "✅ Pipeline completed successfully!"
-            echo "🌐 Application URL: http://localhost:${HEALTH_CHECK_PORT}"
-        }
-        
+        executePipeline(config, derived)
     } catch (Exception e) {
-        currentBuild.result = 'FAILURE'
-        echo "❌ Pipeline failed with error: ${e.message}"
-        echo "🔍 Stack trace: ${e.getStackTrace().join('\n')}"
-        throw e
+        handleFailure(e, config, derived)
     } finally {
-        // ============================================
-        // CLEANUP
-        // ============================================
-        echo "=== Final cleanup ==="
-        sh '''
-            echo "🧹 Cleaning up Docker resources..."
-            docker logout 2>/dev/null || true
-            echo "✅ Cleanup completed"
-        '''
-        
-        if (currentBuild.result == 'SUCCESS') {
-            echo """
-            🎉🎉🎉 DEPLOYMENT SUCCESSFUL! 🎉🎉🎉
-            
-            Your application has been deployed to Docker Swarm.
-            
-            🌐 Access it at: http://localhost:${HEALTH_CHECK_PORT}
-            
-            📊 Service details:
-            • Stack: ${STACK_NAME}
-            • Service: ${ACTUAL_SERVICE_NAME}
-            • Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
-            • Port: ${HEALTH_CHECK_PORT}
-            
-            🔧 Management commands:
-            • View logs: docker service logs ${ACTUAL_SERVICE_NAME} -f
-            • Check status: docker service ps ${ACTUAL_SERVICE_NAME}
-            • List all services: docker service ls
-            • Remove stack: docker stack rm ${STACK_NAME}
-            • Scale service: docker service scale ${ACTUAL_SERVICE_NAME}=3
-            """
-        } else {
-            echo """
-            ❌❌❌ DEPLOYMENT FAILED ❌❌❌
-            
-            🔍 Troubleshooting steps:
-            1. Check Docker Swarm status: docker node ls
-            2. Check services: docker service ls
-            3. Check specific service: docker service ps ${ACTUAL_SERVICE_NAME}
-            4. Check logs: docker service logs ${ACTUAL_SERVICE_NAME}
-            5. Verify Docker Hub credentials
-            6. Check port ${HEALTH_CHECK_PORT} availability
-            
-            🛠️  Recovery options:
-            • Manually deploy: docker stack deploy -c ${COMPOSE_FILE} ${STACK_NAME}
-            • Check compose file: cat ${COMPOSE_FILE}
-            • Verify Docker image exists: docker image ls | grep ${SERVICE_NAME}
-            """
-        }
+        cleanup(config)
+        displaySummary(currentBuild.result, config, derived)
     }
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+def calculateDerivedValues(config) {
+    return [
+        // Docker image tags
+        imageTag: "${config.docker.repo}/${config.application.name}:${BUILD_NUMBER}",
+        latestTag: "${config.docker.repo}/${config.application.name}:latest",
+        
+        // Service names
+        swarmServiceName: "${config.deployment.stackName}_${config.deployment.composeServiceName}",
+        
+        // Build info
+        buildInfo: [
+            number: BUILD_NUMBER,
+            tag: BUILD_TAG,
+            url: BUILD_URL
+        ]
+    ]
+}
+
+// ============================================
+// PIPELINE STAGES
+// ============================================
+
+def executePipeline(config, derived) {
+    timeout(time: config.pipeline.buildTimeout, unit: 'MINUTES') {
+        stage('🚨 Validate Git Workflow') { validateGitWorkflow(config) }
+        stage('🔧 Environment Check') { environmentCheck(config) }
+        stage('📥 Checkout Code') { checkoutCode() }
+        stage('📦 Install Dependencies') { installDependencies(config) }
+        stage('🏗️ Build Application') { buildApplication(config) }
+        stage('🐳 Build Docker Image') { buildDockerImage(config, derived) }
+        stage('📤 Push to Docker Hub') { pushToDockerHub(config, derived) }
+        stage('📋 Prepare Deployment') { prepareDeployment(config, derived) }
+        stage('🚀 Deploy to Swarm') { deployToSwarm(config, derived) }
+        stage('🔍 Verify Deployment') { verifyDeployment(config, derived) }
+        stage('🏥 Health Check') { performHealthCheck(config, derived) }
+        stage('📊 Final Status') { displayFinalStatus(config, derived) }
+    }
+}
+
+def validateGitWorkflow(config) {
+    if (!config.validation.blockDirectPushes) {
+        echo "⚠️ Direct push validation is disabled"
+        return
+    }
+    
+    def isMerge = sh(
+        script: "git rev-parse HEAD^2 >/dev/null 2>&1 && echo true || echo false",
+        returnStdout: true
+    ).trim()
+
+    def committer = sh(
+        script: "git log -1 --pretty=format:%cn",
+        returnStdout: true
+    ).trim()
+
+    if (isMerge == "false") {
+        error """
+        ❌ DIRECT PUSH TO MAIN BLOCKED
+        
+        Commit ${env.GIT_COMMIT} by ${committer} is a direct commit to main.
+        
+        REQUIRED WORKFLOW:
+        1. Create feature branch: git checkout -b feature/your-feature
+        2. Make changes and commit
+        3. Create Pull Request to main
+        4. Get code review approval
+        5. Merge via PR
+        """
+    }
+    
+    echo "✅ Git workflow validated"
+}
+
+def environmentCheck(config) {
+    echo "Checking environment requirements"
+    
+    // Check required tools
+    config.validation.requiredTools.each { tool ->
+        sh """
+            if command -v ${tool} >/dev/null 2>&1; then
+                echo "✅ ${tool}: \$(which ${tool})"
+            else
+                echo "❌ ${tool}: Not found"
+                exit 1
+            fi
+        """
+    }
+    
+    // Check disk space
+    sh """
+        FREE_SPACE=\$(df -h . | awk 'NR==2 {print \$4}' | sed 's/G//')
+        echo "💾 Free disk space: \${FREE_SPACE}G"
+        
+        if [ \$FREE_SPACE -lt ${config.validation.minDiskSpace} ]; then
+            echo "⚠️  Low disk space (< ${config.validation.minDiskSpace}G)"
+        fi
+    """
+    
+    echo "✅ Environment check passed"
+}
+
+def checkoutCode() {
+    echo "Checking out source code"
+    checkout scm
+    sh 'git log --oneline -1'
+}
+
+def installDependencies(config) {
+    echo "Installing dependencies: ${config.application.installCommand}"
+    sh config.application.installCommand
+    echo "✅ Dependencies installed"
+}
+
+def buildApplication(config) {
+    echo "Building application: ${config.application.buildCommand}"
+    sh config.application.buildCommand
+    echo "✅ Application built"
+}
+
+def buildDockerImage(config, derived) {
+    echo "Building Docker image"
+    sh """
+        docker build -t ${derived.imageTag} .
+        docker tag ${derived.imageTag} ${derived.latestTag}
+    """
+    echo "✅ Docker image built: ${derived.imageTag}"
+}
+
+def pushToDockerHub(config, derived) {
+    echo "Pushing to Docker Hub"
+    
+    withCredentials([usernamePassword(
+        credentialsId: config.docker.credentialsId,
+        usernameVariable: 'DOCKER_USER',
+        passwordVariable: 'DOCKER_PASS'
+    )]) {
+        sh """
+            docker login -u \${DOCKER_USER} -p \${DOCKER_PASS}
+            docker push ${derived.imageTag}
+            docker push ${derived.latestTag}
+        """
+    }
+    
+    echo "✅ Images pushed to Docker Hub"
+}
+
+def prepareDeployment(config, derived) {
+    echo "Preparing deployment configuration"
+    
+    def composeContent = """
+        version: '3.8'
+        services:
+          ${config.deployment.composeServiceName}:
+            image: ${derived.imageTag}
+            ports:
+              - "${config.deployment.hostPort}:${config.application.containerPort}"
+            deploy:
+              replicas: ${config.deployment.replicas}
+              restart_policy:
+                condition: on-failure
+              update_config:
+                parallelism: ${config.deployment.updateParallelism}
+                delay: ${config.deployment.updateDelay}
+                order: ${config.deployment.updateOrder}
+    """
+    
+    writeFile file: config.deployment.composeFile, text: composeContent
+    echo "✅ Created ${config.deployment.composeFile}"
+}
+
+def deployToSwarm(config, derived) {
+    echo "Deploying to Docker Swarm"
+    
+    // Ensure Swarm is active
+    def swarmStatus = sh(
+        script: "docker info --format '{{.Swarm.LocalNodeState}}'",
+        returnStdout: true
+    ).trim()
+    
+    if (swarmStatus != 'active') {
+        echo "Initializing Docker Swarm"
+        sh "docker swarm init --advertise-addr 127.0.0.1"
+    }
+    
+    // Deploy stack
+    withCredentials([usernamePassword(
+        credentialsId: config.docker.credentialsId,
+        usernameVariable: 'DOCKER_USER',
+        passwordVariable: 'DOCKER_PASS'
+    )]) {
+        sh """
+            docker login -u \${DOCKER_USER} -p \${DOCKER_PASS}
+            docker stack deploy -c ${config.deployment.composeFile} ${config.deployment.stackName} --with-registry-auth
+        """
+    }
+    
+    echo "✅ Stack deployed: ${config.deployment.stackName}"
+    echo "🔌 Service: ${derived.swarmServiceName}"
+    echo "🌐 Port: ${config.deployment.hostPort}"
+}
+
+def verifyDeployment(config, derived) {
+    echo "Verifying deployment"
+    sleep 5
+    
+    retry(config.pipeline.maxRetries) {
+        sh """
+            echo "📊 Deployment Status"
+            echo "===================="
+            docker stack services ${config.deployment.stackName}
+            
+            echo ""
+            echo "📈 Service Details"
+            echo "=================="
+            docker service inspect ${derived.swarmServiceName} --format '
+Name:    {{.Spec.Name}}
+Image:   {{.Spec.TaskTemplate.ContainerSpec.Image}}
+Status:  {{.UpdateStatus.State}}
+Replicas: {{.Spec.Mode.Replicated.Replicas}} desired, {{.Mode}} mode
+Port:    {{range .Endpoint.Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
+Created: {{.CreatedAt}}
+            '
+        """
+    }
+    
+    echo "✅ Deployment verified"
+}
+
+def performHealthCheck(config, derived) {
+    echo "Performing health check on port ${config.deployment.hostPort}"
+    
+    def healthCheckPassed = false
+    def maxAttempts = config.pipeline.healthCheckAttempts
+    
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+        echo "Health check attempt ${attempt}/${maxAttempts}"
+        
+        try {
+            def statusCode = sh(
+                script: """
+                    curl -s -o /dev/null -w '%{http_code}' \
+                        --max-time 5 \
+                        http://localhost:${config.deployment.hostPort}${config.application.healthCheckPath} || echo '000'
+                """,
+                returnStdout: true
+            ).trim()
+            
+            if (statusCode == '200' || statusCode.startsWith('2')) {
+                echo "✅ Health check passed (HTTP ${statusCode})"
+                healthCheckPassed = true
+                break
+            }
+        } catch (Exception e) {
+            echo "⏳ Connection attempt ${attempt} failed"
+        }
+        
+        sleep config.pipeline.healthCheckInterval
+    }
+    
+    if (!healthCheckPassed) {
+        echo "⚠️  Health check inconclusive"
+        sh "docker service logs ${derived.swarmServiceName} --tail 5"
+        echo "⚠️  Manual verification recommended"
+    }
+}
+
+def displayFinalStatus(config, derived) {
+    echo "Final Deployment Status"
+    echo "======================"
+    
+    sh """
+        echo "🎯 DEPLOYMENT COMPLETE"
+        echo ""
+        echo "📋 Configuration"
+        echo "   Application:  ${config.application.name}"
+        echo "   Stack:        ${config.deployment.stackName}"
+        echo "   Service:      ${derived.swarmServiceName}"
+        echo "   Image:        ${derived.imageTag}"
+        echo "   Port:         ${config.deployment.hostPort}"
+        echo "   Build:        ${derived.buildInfo.number}"
+        echo ""
+        echo "🌐 Access URL"
+        echo "   http://localhost:${config.deployment.hostPort}"
+        echo ""
+        echo "🔧 Management Commands"
+        echo "   View logs:    docker service logs ${derived.swarmServiceName} -f"
+        echo "   Check status: docker service ps ${derived.swarmServiceName}"
+        echo "   Scale:        docker service scale ${derived.swarmServiceName}=3"
+        echo "   Remove:       docker stack rm ${config.deployment.stackName}"
+    """
+    
+    currentBuild.description = "${config.application.name} v${derived.buildInfo.number}"
+}
+
+// ============================================
+// ERROR HANDLING & CLEANUP
+// ============================================
+
+def handleFailure(Exception e, config, derived) {
+    currentBuild.result = 'FAILURE'
+    
+    echo """
+    ❌ PIPELINE FAILED
+    =================
+    Error: ${e.message}
+    
+    Debug Information:
+    • Service: ${derived.swarmServiceName}
+    • Port: ${config.deployment.hostPort}
+    • Build: ${derived.buildInfo.number}
+    """
+    
+    // Collect debugging info
+    try {
+        sh """
+            echo "🔍 Docker Services:"
+            docker service ls 2>/dev/null || echo "No services found"
+            
+            echo ""
+            echo "🔍 Stack Status:"
+            docker stack ps ${config.deployment.stackName} 2>/dev/null || echo "Stack not found"
+            
+            echo ""
+            echo "🔍 Recent Logs:"
+            docker service logs ${derived.swarmServiceName} --tail 10 2>/dev/null || echo "Could not get logs"
+        """
+    } catch (Exception ex) {
+        echo "⚠️  Could not collect debug info: ${ex.message}"
+    }
+    
+    throw e
+}
+
+def cleanup(config) {
+    echo "Performing cleanup"
+    
+    if (config.pipeline.pruneImages) {
+        sh "docker image prune -f 2>/dev/null || true"
+    }
+    
+    sh "docker logout 2>/dev/null || true"
+    
+    echo "✅ Cleanup completed"
+}
+
+def displaySummary(result, config, derived) {
+    def message = """
+    ========================================
+    PIPELINE ${result ?: 'COMPLETED'}
+    ========================================
+    """
+    
+    if (result == 'SUCCESS') {
+        message += """
+        🎉 SUCCESS
+        • Application: ${config.application.name}
+        • Version: ${derived.buildInfo.number}
+        • Service: ${derived.swarmServiceName}
+        • URL: http://localhost:${config.deployment.hostPort}
+        • Build: ${derived.buildInfo.url}
+        """
+    } else {
+        message += """
+        ❌ FAILURE
+        • Check logs for details
+        • Verify port ${config.deployment.hostPort} is available
+        • Check Docker Hub credentials
+        • Verify network connectivity
+        
+        Recovery Steps:
+        1. Check service: docker service ls | grep ${config.application.name}
+        2. View logs: docker service logs ${derived.swarmServiceName}
+        3. Manual deploy: docker stack deploy -c ${config.deployment.composeFile} ${config.deployment.stackName}
+        """
+    }
+    
+    echo message
 }
