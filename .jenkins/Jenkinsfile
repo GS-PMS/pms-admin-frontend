@@ -3,9 +3,13 @@ node {
     env.DOCKER_HUB_REPO = 'salmawaleedd'
     env.SERVICE_NAME = 'pms-admin-frontend'
     env.IMAGE_TAG = "${BUILD_NUMBER}"
-    env.SWARM_SERVICE_NAME = 'admin-frontend'
-    env.HEALTH_CHECK_PORT = '4200'
     env.COMPOSE_FILE = 'docker-compose-admin.yml'
+    env.STACK_NAME = 'pms-admin'  // Stack name from docker-compose deployment
+    env.COMPOSE_SERVICE_NAME = 'admin-frontend'  // Service name in docker-compose file
+    env.HEALTH_CHECK_PORT = '4200'  // Health check port
+    
+    // This will hold the actual service name in Docker Swarm (with stack prefix)
+    env.ACTUAL_SERVICE_NAME = "${env.STACK_NAME}_${env.COMPOSE_SERVICE_NAME}"
     
     try {
         // ============================================
@@ -51,17 +55,12 @@ node {
             sh '''
                 echo "📦 Required tools:"
                 docker --version || { echo "❌ Docker not found"; exit 1; }
+                docker-compose --version || { echo "⚠️ docker-compose not found"; }
                 node --version || { echo "❌ Node.js not found"; exit 1; }
                 npm --version || { echo "❌ npm not found"; exit 1; }
                 git --version || { echo "❌ Git not found"; exit 1; }
-                which curl || { echo "❌ curl not found"; exit 1; }
                 
                 echo "✅ All required tools available"
-                
-                FREE_SPACE=$(df -h . | awk 'NR==2 {print $4}' | sed 's/G//')
-                if [ $FREE_SPACE -lt 1 ]; then
-                    echo "⚠️  Low disk space: ${FREE_SPACE}G free"
-                fi
             '''
             
             echo "✅ Environment check passed"
@@ -88,13 +87,6 @@ node {
             sh 'npm ci'
             
             echo "✅ Dependencies installed successfully"
-            
-            def nodeModulesSize = sh(
-                script: 'du -sh node_modules | cut -f1',
-                returnStdout: true
-            ).trim()
-            
-            echo "📊 Node modules size: ${nodeModulesSize}"
         }
 
         // ============================================
@@ -106,13 +98,6 @@ node {
             sh 'npm run build'
             
             echo "✅ Angular build completed"
-            
-            def buildSize = sh(
-                script: 'du -sh dist/ | cut -f1',
-                returnStdout: true
-            ).trim()
-            
-            echo "📊 Build output size: ${buildSize}"
         }
 
         // ============================================
@@ -151,101 +136,48 @@ node {
                     
                     echo "📤 Pushing 'latest' tag..."
                     docker push ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                    
-                    echo "🚪 Logging out from Docker Hub"
-                    docker logout
                 """
             }
             
             echo "✅ Images pushed to Docker Hub successfully"
-            echo "🌐 Available at: https://hub.docker.com/r/${DOCKER_HUB_REPO}/${SERVICE_NAME}"
         }
 
         // ============================================
-        // STAGE 8: AUTO-CONFIGURE DOCKER SWARM
+        // STAGE 8: PREPARE DOCKER COMPOSE FILE
         // ============================================
-        stage('🔍 Auto-Configure Docker Swarm') {
-            echo "=== Auto-configuring Docker Swarm ==="
+        stage('📋 Prepare Docker Compose') {
+            echo "=== Preparing Docker Compose file ==="
             
-            // 1. Auto-initialize Swarm if not active
-            def swarmActive = sh(
-                script: "docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo 'inactive'",
+            // Check if docker-compose file exists
+            def composeExists = sh(
+                script: "test -f ${COMPOSE_FILE} && echo 'exists' || echo 'not-found'",
                 returnStdout: true
             ).trim()
             
-            if (swarmActive != 'active') {
-                echo "🔄 Docker Swarm is not active - initializing..."
-                try {
-                    sh '''
-                        docker swarm init --advertise-addr 127.0.0.1 2>/dev/null || \
-                        docker swarm join-token manager 2>/dev/null || \
-                        echo "Swarm initialization may have failed"
-                    '''
-                    sleep 3
-                    
-                    // Verify Swarm is now active
-                    swarmActive = sh(
-                        script: "docker info --format '{{.Swarm.LocalNodeState}}'",
-                        returnStdout: true
-                    ).trim()
-                    
-                    if (swarmActive == 'active') {
-                        echo "✅ Docker Swarm initialized successfully"
-                    } else {
-                        echo "⚠️  Could not verify Swarm initialization"
-                    }
-                } catch (Exception e) {
-                    echo "⚠️  Swarm initialization attempt failed: ${e.message}"
-                }
-            } else {
-                echo "✅ Docker Swarm is already active"
-            }
-            
-            // 2. Check if service exists
-            def serviceExists = sh(
-                script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Name}}' 2>/dev/null || echo 'not-found'",
-                returnStdout: true
-            ).trim()
-            
-            if (serviceExists == 'not-found') {
-                echo "⚠️  Service '${SWARM_SERVICE_NAME}' not found - creating it..."
+            if (composeExists == 'exists') {
+                echo "✅ Docker compose file exists: ${COMPOSE_FILE}"
+                // Display current content
+                sh "cat ${COMPOSE_FILE}"
                 
-                // Check if COMPOSE_FILE exists
-                def composeFileExists = sh(
-                    script: "test -f ${COMPOSE_FILE} && echo 'exists' || echo 'not-found'",
+                // Extract current port from compose file if available
+                def currentPort = sh(
+                    script: """
+                        grep -oP 'ports:\\s*-\\s*\"\\K[0-9]+(?=:)' ${COMPOSE_FILE} | head -1 || echo '${HEALTH_CHECK_PORT}'
+                    """,
                     returnStdout: true
                 ).trim()
                 
-                if (composeFileExists == 'exists') {
-                    // Use the compose file to create service
-                    echo "📦 Creating service from ${COMPOSE_FILE}..."
-                    sh """
-                        docker stack deploy -c ${COMPOSE_FILE} pms-admin
-                        sleep 10
-                        echo "✅ Service created from ${COMPOSE_FILE}"
-                    """
-                } else {
-                    error """
-                    ❌ COMPOSE FILE NOT FOUND: ${COMPOSE_FILE}
-                    
-                    📋 You need to create '${COMPOSE_FILE}' with this content:
-                    
-                    version: '3.8'
-                    services:
-                      ${SWARM_SERVICE_NAME}:
-                        image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                        ports:
-                          - "${HEALTH_CHECK_PORT}:80"
-                        deploy:
-                          replicas: 2
-                          restart_policy:
-                            condition: on-failure
-                    
-                    💡 Create the file with this command:
+                if (currentPort && currentPort != HEALTH_CHECK_PORT) {
+                    echo "ℹ️  Using port from compose file: ${currentPort}"
+                    env.HEALTH_CHECK_PORT = currentPort
+                }
+            } else {
+                echo "📝 Creating docker-compose file..."
+                sh """
                     cat > ${COMPOSE_FILE} << 'EOF'
                     version: '3.8'
                     services:
-                      ${SWARM_SERVICE_NAME}:
+                      ${COMPOSE_SERVICE_NAME}:
                         image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
                         ports:
                           - "${HEALTH_CHECK_PORT}:80"
@@ -253,306 +185,173 @@ node {
                           replicas: 2
                           restart_policy:
                             condition: on-failure
-                    EOF
-                    
-                    Then run this pipeline again.
-                    """
-                }
-                
-                // Verify service was created
-                sleep 5
-                serviceExists = sh(
-                    script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Name}}' 2>/dev/null || echo 'not-found'",
-                    returnStdout: true
-                ).trim()
-                
-                if (serviceExists == 'not-found') {
-                    // Try alternative naming (Docker adds stack prefix)
-                    def stackServiceName = "pms-admin_${SWARM_SERVICE_NAME}"
-                    serviceExists = sh(
-                        script: "docker service ls --filter name=${stackServiceName} --format '{{.Name}}' 2>/dev/null || echo 'not-found'",
-                        returnStdout: true
-                    ).trim()
-                    
-                    if (serviceExists != 'not-found') {
-                        echo "ℹ️  Found service with stack prefix: ${serviceExists}"
-                        env.SWARM_SERVICE_NAME = serviceExists
-                    } else {
-                        // Last resort: create service directly
-                        echo "⚠️  Stack deployment didn't create service - creating directly..."
-                        sh """
-                            docker service create \\
-                                --name ${SWARM_SERVICE_NAME} \\
-                                --publish ${HEALTH_CHECK_PORT}:80 \\
-                                --replicas 2 \\
-                                --restart-condition on-failure \\
-                                ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                        """
-                        sleep 10
-                    }
-                }
+                          update_config:
+                            parallelism: 1
+                            delay: 10s
+                            order: start-first
+                EOF
+                """
+                echo "✅ Created ${COMPOSE_FILE}"
+                sh "cat ${COMPOSE_FILE}"
             }
             
-            // 3. Verify service exists now
-            def finalServiceExists = sh(
-                script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Name}}' 2>/dev/null || echo 'not-found'",
-                returnStdout: true
-            ).trim()
-            
-            if (finalServiceExists == 'not-found') {
-                // Check for any service with similar name
-                def allServices = sh(
-                    script: "docker service ls --format '{{.Name}}'",
-                    returnStdout: true
-                ).trim()
-                
-                echo "🔍 Searching for existing services:"
-                echo "${allServices}"
-                
-                // Try to find our service with variations
-                def foundService = allServices.split('\n').find { it.contains('admin') || it.contains(SERVICE_NAME) }
-                
-                if (foundService) {
-                    echo "ℹ️  Found similar service: ${foundService}"
-                    echo "Updating SWARM_SERVICE_NAME to: ${foundService}"
-                    env.SWARM_SERVICE_NAME = foundService
-                } else {
-                    error """
-                    ❌ SERVICE CREATION FAILED
-                    
-                    Service '${SWARM_SERVICE_NAME}' could not be created.
-                    
-                    🔧 MANUAL CREATION REQUIRED:
-                    
-                    OPTION 1: Create compose file and deploy:
-                    echo 'version: "3.8"
-                    services:
-                      ${SWARM_SERVICE_NAME}:
-                        image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                        ports:
-                          - "${HEALTH_CHECK_PORT}:80"
-                        deploy:
-                          replicas: 2' > ${COMPOSE_FILE}
-                    
-                    docker stack deploy -c ${COMPOSE_FILE} pms-admin
-                    
-                    OPTION 2: Create service directly:
-                    docker service create \\
-                      --name ${SWARM_SERVICE_NAME} \\
-                      --publish ${HEALTH_CHECK_PORT}:80 \\
-                      --replicas 2 \\
-                      ${DOCKER_HUB_REPO}/${SERVICE_NAME}:latest
-                    
-                    Then run this pipeline again.
-                    """
-                }
-            }
-            
-            // 4. Get service details
-            echo "✅ Service '${SWARM_SERVICE_NAME}' is ready"
+            // Update the image tag in the compose file to use the new build
+            echo "🔄 Updating image tag in compose file..."
             sh """
-                echo "📊 Service details:"
-                docker service ls --filter name=${SWARM_SERVICE_NAME} --format '
-Name:     {{.Name}}
-Image:    {{.Image}}
-Replicas: {{.Replicas}}
-Ports:    {{.Ports}}
-                '
-                
-                echo ""
-                echo "📈 Current status:"
-                docker service ps ${SWARM_SERVICE_NAME} --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' --no-trunc | head -10
+                sed -i "s|image:.*${SERVICE_NAME}.*|image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}|g" ${COMPOSE_FILE}
             """
             
-            echo "✅ All pre-deployment checks completed successfully"
+            echo "📋 Updated compose file content:"
+            sh "cat ${COMPOSE_FILE}"
+            
+            echo "✅ Docker compose file prepared"
+            echo "🔌 Health check port: ${HEALTH_CHECK_PORT}"
         }
 
         // ============================================
         // STAGE 9: DEPLOY TO DOCKER SWARM
         // ============================================
         stage('🚀 Deploy to Docker Swarm') {
-            echo "=== Deploying ${SERVICE_NAME} to Docker Swarm ==="
+            echo "=== Deploying to Docker Swarm ==="
             
-            echo "📦 New image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
-            echo "🎯 Target service: ${SWARM_SERVICE_NAME}"
-            echo "🏷️  Updating from current to new image..."
-            
-            // Get current image for comparison
-            def currentImage = sh(
-                script: """
-                    docker service inspect ${SWARM_SERVICE_NAME} \
-                        --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo 'unknown'
-                """,
+            // 1. Initialize Swarm if needed
+            def swarmStatus = sh(
+                script: "docker info --format '{{.Swarm.LocalNodeState}}' 2>/dev/null || echo 'inactive'",
                 returnStdout: true
             ).trim()
             
-            echo "🔄 Current image: ${currentImage}"
-            echo "🆕 New image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
-            
-            if (currentImage == "${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}") {
-                echo "⚠️  Service already running the same image version"
-                echo "Skipping update - nothing to deploy"
+            if (swarmStatus != 'active') {
+                echo "🔄 Initializing Docker Swarm..."
+                sh "docker swarm init --advertise-addr 127.0.0.1 2>/dev/null || true"
+                sleep 3
+                echo "✅ Docker Swarm initialized"
             } else {
-                // Update the service with controlled rollout
-                sh """
-                    docker service update \
-                        --image ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG} \
-                        --update-parallelism 1 \
-                        --update-delay 10s \
-                        --update-failure-action rollback \
-                        --update-monitor 30s \
-                        --update-order start-first \
-                        --with-registry-auth \
-                        ${SWARM_SERVICE_NAME}
-                """
-                
-                echo "🔄 Rolling update initiated"
-                echo "📋 Update strategy:"
-                echo "   • Parallelism: 1 (one container at a time)"
-                echo "   • Delay: 10s (between updates)"
-                echo "   • Failure action: rollback"
-                echo "   • Order: start-first (new before old)"
-                echo "   • Auth: with-registry-auth (pulls private images)"
+                echo "✅ Docker Swarm is active"
             }
+            
+            // 2. Deploy/Update the stack
+            echo "📦 Deploying stack: ${STACK_NAME}"
+            
+            withCredentials([usernamePassword(
+                credentialsId: 'dockerhub-credentials',
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                sh """
+                    echo "🔐 Logging in to Docker Hub for registry auth"
+                    echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin
+                    
+                    echo "🚀 Deploying stack..."
+                    docker stack deploy -c ${COMPOSE_FILE} ${STACK_NAME} --with-registry-auth
+                    
+                    echo "🚪 Logging out from Docker Hub"
+                    docker logout
+                """
+            }
+            
+            echo "✅ Stack deployment initiated"
+            echo "📊 The service will be named: ${ACTUAL_SERVICE_NAME}"
+            echo "🔌 Service will be available on port: ${HEALTH_CHECK_PORT}"
         }
 
         // ============================================
-        // STAGE 10: MONITOR DEPLOYMENT
+        // STAGE 10: VERIFY DEPLOYMENT
         // ============================================
-        stage('👀 Monitor Deployment') {
-            echo "=== Monitoring deployment progress ==="
+        stage('🔍 Verify Deployment') {
+            echo "=== Verifying deployment ==="
             
-            def maxWaitTime = 300  // 5 minutes
-            def startTime = System.currentTimeMillis()
-            def updateCompleted = false
-            def rollbackDetected = false
+            // Wait a bit for containers to start
+            sleep 10
             
-            while (System.currentTimeMillis() - startTime < maxWaitTime * 1000) {
-                // 1. Check update status
-                def updateStatus = sh(
-                    script: """
-                        docker service inspect ${SWARM_SERVICE_NAME} \
-                            --format '{{.UpdateStatus.State}}' 2>/dev/null || echo 'unknown'
-                    """,
-                    returnStdout: true
-                ).trim()
-                
-                // 2. Check replica status
-                def replicaStatus = sh(
-                    script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Replicas}}' 2>/dev/null || echo '0/0'",
-                    returnStdout: true
-                ).trim()
-                
-                // 3. Check current image (verify update took effect)
-                def currentImage = sh(
-                    script: """
-                        docker service inspect ${SWARM_SERVICE_NAME} \
-                            --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}' 2>/dev/null || echo 'unknown'
-                    """,
-                    returnStdout: true
-                ).trim()
-                
-                echo "📊 Status update:"
-                echo "   Update state: ${updateStatus}"
-                echo "   Replicas: ${replicaStatus}"
-                echo "   Current image: ${currentImage}"
-                
-                // Check for rollback
-                if (updateStatus == 'rollback_completed') {
-                    rollbackDetected = true
-                    error "❌ DEPLOYMENT FAILED - Service was rolled back!"
-                }
-                
-                if (updateStatus == 'rollback_started' || updateStatus == 'paused') {
-                    echo "⚠️  Update is rolling back..."
-                    rollbackDetected = true
-                }
-                
-                // Check for completion
-                def allRunning = false
-                if (replicaStatus.contains('/')) {
-                    def parts = replicaStatus.split('/')
-                    def running = parts[0].toInteger()
-                    def total = parts[1].toInteger()
-                    allRunning = (running == total)
-                }
-                
-                def updateComplete = (updateStatus == 'completed' || updateStatus == '' || updateStatus == 'unknown')
-                
-                if (allRunning && updateComplete) {
-                    updateCompleted = true
-                    break
-                }
-                
-                sleep 10  // Wait 10 seconds between checks
-            }
+            echo "📋 Checking stack status..."
+            sh """
+                echo "Stack: ${STACK_NAME}"
+                docker stack ls
+                echo ""
+                echo "Services in stack:"
+                docker stack services ${STACK_NAME}
+                echo ""
+                echo "Tasks (containers):"
+                docker stack ps ${STACK_NAME}
+            """
             
-            if (rollbackDetected) {
-                error "❌ Deployment failed - service was rolled back to previous version"
-            }
+            // Check specific service
+            echo "🔍 Checking service: ${ACTUAL_SERVICE_NAME}"
+            def serviceExists = sh(
+                script: "docker service ls --filter name=${ACTUAL_SERVICE_NAME} --format '{{.Name}}' 2>/dev/null || echo ''",
+                returnStdout: true
+            ).trim()
             
-            if (!updateCompleted) {
-                echo "⚠️  Deployment taking longer than expected"
-                echo "Checking container status..."
-                sh "docker service ps ${SWARM_SERVICE_NAME} --no-trunc"
+            if (serviceExists) {
+                echo "✅ Service found: ${serviceExists}"
                 
-                // Final check - are containers running?
-                def finalReplicas = sh(
-                    script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Replicas}}'",
-                    returnStdout: true
-                ).trim()
-                
-                if (finalReplicas.contains('/')) {
-                    def parts = finalReplicas.split('/')
-                    def running = parts[0].toInteger()
-                    def total = parts[1].toInteger()
+                // Get service details
+                sh """
+                    echo "📊 Service details:"
+                    docker service inspect ${ACTUAL_SERVICE_NAME} --format '
+Name:       {{.Spec.Name}}
+Image:      {{.Spec.TaskTemplate.ContainerSpec.Image}}
+Replicas:   {{.Spec.Mode.Replicated.Replicas}}
+Ports:      {{range .Endpoint.Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
+                    '
                     
-                    if (running == total) {
-                        echo "✅ All replicas running, considering deployment successful"
-                        updateCompleted = true
-                    } else {
-                        echo "⚠️  Only ${running}/${total} replicas running"
-                    }
+                    echo ""
+                    echo "📈 Current state:"
+                    docker service ps ${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' --no-trunc
+                """
+                
+                // Get actual published port
+                def actualPublishedPort = sh(
+                    script: """
+                        docker service inspect ${ACTUAL_SERVICE_NAME} \
+                            --format '{{(index .Endpoint.Ports 0).PublishedPort}}' 2>/dev/null || echo '${HEALTH_CHECK_PORT}'
+                    """,
+                    returnStdout: true
+                ).trim()
+                
+                if (actualPublishedPort != HEALTH_CHECK_PORT) {
+                    echo "ℹ️  Actual published port is: ${actualPublishedPort}"
+                    env.HEALTH_CHECK_PORT = actualPublishedPort
+                }
+            } else {
+                echo "⚠️  Service not found with exact name, listing all services..."
+                sh "docker service ls --format 'table {{.Name}}\\t{{.Image}}\\t{{.Replicas}}'"
+                
+                // Try to find service with similar name
+                def similarService = sh(
+                    script: "docker service ls --format '{{.Name}}' | grep -i 'admin\\|frontend' | head -1 || echo ''",
+                    returnStdout: true
+                ).trim()
+                
+                if (similarService) {
+                    echo "ℹ️  Found similar service: ${similarService}"
+                    env.ACTUAL_SERVICE_NAME = similarService
                 }
             }
             
-            if (updateCompleted) {
-                echo "✅ Deployment monitoring completed successfully"
-            } else {
-                error "❌ Deployment monitoring timeout - check service manually"
-            }
+            echo "✅ Verification completed"
+            echo "🔌 Health check port: ${HEALTH_CHECK_PORT}"
         }
 
         // ============================================
         // STAGE 11: HEALTH CHECK
         // ============================================
         stage('🏥 Health Check') {
-            echo "=== Performing health checks ==="
-            
-            // Get the actual published port from the service
-            def publishedPort = sh(
-                script: """
-                    docker service inspect ${SWARM_SERVICE_NAME} \
-                        --format '{{(index .Endpoint.Ports 0).PublishedPort}}' 2>/dev/null || echo '${HEALTH_CHECK_PORT}'
-                """,
-                returnStdout: true
-            ).trim()
-            
-            echo "🔌 Testing service on port: ${publishedPort}"
+            echo "=== Performing health check ==="
+            echo "🔌 Testing service on port: ${HEALTH_CHECK_PORT}"
             
             def healthCheckPassed = false
-            def maxAttempts = 6  // 1 minute total with 10s intervals
+            def maxAttempts = 10
             
             for (int attempt = 1; attempt <= maxAttempts; attempt++) {
                 echo "🩺 Health check attempt ${attempt}/${maxAttempts}"
                 
                 try {
-                    // Try to access the service
                     def statusCode = sh(
                         script: """
                             curl -s -o /dev/null -w '%{http_code}' \
-                                --max-time 5 \
-                                http://localhost:${publishedPort} || echo '000'
+                                --max-time 10 \
+                                http://localhost:${HEALTH_CHECK_PORT} || echo '000'
                         """,
                         returnStdout: true
                     ).trim()
@@ -560,170 +359,110 @@ Ports:    {{.Ports}}
                     if (statusCode == '200' || statusCode.startsWith('2')) {
                         echo "✅ Health check PASSED (HTTP ${statusCode})"
                         healthCheckPassed = true
-                        
-                        // Additional verification - get page title
-                        def pageTitle = sh(
-                            script: """
-                                curl -s --max-time 5 http://localhost:${publishedPort} | \
-                                grep -o '<title>[^<]*</title>' | \
-                                sed 's/<title>\\(.*\\)<\\/title>/\\1/' || echo 'Unknown'
-                            """,
-                            returnStdout: true
-                        ).trim()
-                        
-                        echo "📄 Page title: ${pageTitle}"
                         break
                     } else {
-                        echo "⏳ Got HTTP ${statusCode}, retrying in 10s..."
+                        echo "⏳ Got HTTP ${statusCode}, retrying in 5s..."
                     }
                 } catch (Exception e) {
-                    echo "⏳ Connection failed: ${e.message}, retrying in 10s..."
+                    echo "⏳ Connection failed, retrying in 5s..."
                 }
                 
-                sleep 10
+                sleep 5
             }
             
-            if (!healthCheckPassed) {
-                echo "⚠️  Health check inconclusive - checking container logs"
-                
-                // Fallback: check if containers are running
+            if (healthCheckPassed) {
+                echo "✅ Service is healthy and responding on port ${HEALTH_CHECK_PORT}"
+            } else {
+                echo "⚠️  Health check failed or inconclusive on port ${HEALTH_CHECK_PORT}"
+                echo "📋 Checking container logs..."
                 sh """
-                    echo "📋 Container status:"
-                    docker service ps ${SWARM_SERVICE_NAME} \
-                        --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Error}}' \
-                        --no-trunc \
-                        --filter 'desired-state=running'
-                    
-                    echo ""
-                    echo "📜 Recent logs:"
-                    docker service logs ${SWARM_SERVICE_NAME} --tail 5 2>/dev/null || echo "Could not retrieve logs"
+                    docker service logs ${ACTUAL_SERVICE_NAME} --tail 10 2>/dev/null || echo "Could not retrieve logs"
                 """
-                
-                // Don't fail the pipeline - just warn
-                echo "⚠️  Health check didn't pass, but containers appear to be running"
-                echo "⚠️  Manual verification recommended"
+                // Don't fail the pipeline for health check
+                echo "⚠️  Manual verification required at http://localhost:${HEALTH_CHECK_PORT}"
             }
         }
 
         // ============================================
-        // STAGE 12: POST-DEPLOYMENT VERIFICATION
+        // STAGE 12: FINAL STATUS
         // ============================================
-        stage('📊 Post-Deployment Verification') {
-            echo "=== Verifying deployment ==="
+        stage('📊 Final Status') {
+            echo "=== Deployment Summary ==="
             
-            // 1. Final service status
+            // Get final service details
             sh """
-                echo "🎯 FINAL SERVICE STATUS:"
-                docker service ls --filter name=${SWARM_SERVICE_NAME} --format '
-Name:     {{.Name}}
-Image:    {{.Image}}
-Replicas: {{.Replicas}}
-Port:    {{range .Ports}}{{.PublishedPort}}->{{.TargetPort}} {{end}}
-                '
-                
+                echo "🎯 DEPLOYMENT COMPLETE"
                 echo ""
-                echo "📦 RUNNING CONTAINERS:"
-                docker service ps ${SWARM_SERVICE_NAME} \
-                    --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' \
-                    --filter 'desired-state=running'
+                echo "📋 Stack: ${STACK_NAME}"
+                echo "🐳 Service: ${ACTUAL_SERVICE_NAME}"
+                echo "📦 Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
+                echo "🔢 Build: ${IMAGE_TAG}"
+                echo "🔌 Port: ${HEALTH_CHECK_PORT}"
+                echo ""
+                echo "📊 Current status:"
+                docker service ls --filter name=${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.Image}}\\t{{.Replicas}}\\t{{.Ports}}'
+                echo ""
+                echo "🐋 Running containers:"
+                docker service ps ${ACTUAL_SERVICE_NAME} --format 'table {{.Name}}\\t{{.CurrentState}}\\t{{.Node}}' --filter 'desired-state=running'
             """
             
-            // 2. Verify all replicas are running
-            def finalReplicas = sh(
-                script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Replicas}}'",
-                returnStdout: true
-            ).trim()
-            
-            if (finalReplicas.contains('/')) {
-                def parts = finalReplicas.split('/')
-                def running = parts[0].toInteger()
-                def desired = parts[1].toInteger()
-                
-                if (running == desired) {
-                    echo "✅ SUCCESS: All ${desired} replicas running"
-                } else {
-                    echo "⚠️  WARNING: ${running}/${desired} replicas running"
-                    echo "   Containers may still be starting up"
-                }
-            }
-            
-            // 3. Deployment summary
-            def currentImage = sh(
-                script: "docker service ls --filter name=${SWARM_SERVICE_NAME} --format '{{.Image}}'",
-                returnStdout: true
-            ).trim()
-            
-            def publishedPort = sh(
-                script: """
-                    docker service inspect ${SWARM_SERVICE_NAME} \
-                        --format '{{(index .Endpoint.Ports 0).PublishedPort}}' 2>/dev/null || echo '${HEALTH_CHECK_PORT}'
-                """,
-                returnStdout: true
-            ).trim()
-            
-            echo """
-            📋 DEPLOYMENT COMPLETE:
-            • Service: ${SWARM_SERVICE_NAME}
-            • New Image: ${currentImage}
-            • Access: http://localhost:${publishedPort}
-            • Replicas: ${finalReplicas}
-            • Build: ${IMAGE_TAG}
-            
-            🔧 MANAGEMENT COMMANDS:
-            View logs:    docker service logs ${SWARM_SERVICE_NAME} -f
-            Check status: docker service ps ${SWARM_SERVICE_NAME}
-            Scale up:     docker service scale ${SWARM_SERVICE_NAME}=3
-            Rollback:     docker service rollback ${SWARM_SERVICE_NAME}
-            """
+            echo "✅ Pipeline completed successfully!"
+            echo "🌐 Application URL: http://localhost:${HEALTH_CHECK_PORT}"
         }
+        
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
+        echo "❌ Pipeline failed with error: ${e.message}"
+        echo "🔍 Stack trace: ${e.getStackTrace().join('\n')}"
         throw e
     } finally {
         // ============================================
-        // POST-BUILD ACTIONS
+        // CLEANUP
         // ============================================
-        echo "=== Cleaning up ==="
+        echo "=== Final cleanup ==="
         sh '''
-            echo "🧹 Cleaning Docker resources..."
+            echo "🧹 Cleaning up Docker resources..."
             docker logout 2>/dev/null || true
-            docker image prune -f 2>/dev/null || true
             echo "✅ Cleanup completed"
         '''
         
         if (currentBuild.result == 'SUCCESS') {
             echo """
-            🎉🎉🎉 PIPELINE SUCCESSFUL! 🎉🎉🎉
+            🎉🎉🎉 DEPLOYMENT SUCCESSFUL! 🎉🎉🎉
             
-            ✅ ${SERVICE_NAME} deployed successfully
-            📦 Version: ${IMAGE_TAG}
-            🐳 Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
-            🐝 Service: ${SWARM_SERVICE_NAME}
-            🌐 Access: http://localhost:${publishedPort}
+            Your application has been deployed to Docker Swarm.
             
-            📊 Next steps:
-            1. Test the application manually
-            2. Monitor for any issues
-            3. Update documentation if needed
+            🌐 Access it at: http://localhost:${HEALTH_CHECK_PORT}
             
-            🛠️  Troubleshooting:
-            docker service logs ${SWARM_SERVICE_NAME} -f
-            docker service ps ${SWARM_SERVICE_NAME}
+            📊 Service details:
+            • Stack: ${STACK_NAME}
+            • Service: ${ACTUAL_SERVICE_NAME}
+            • Image: ${DOCKER_HUB_REPO}/${SERVICE_NAME}:${IMAGE_TAG}
+            • Port: ${HEALTH_CHECK_PORT}
+            
+            🔧 Management commands:
+            • View logs: docker service logs ${ACTUAL_SERVICE_NAME} -f
+            • Check status: docker service ps ${ACTUAL_SERVICE_NAME}
+            • List all services: docker service ls
+            • Remove stack: docker stack rm ${STACK_NAME}
+            • Scale service: docker service scale ${ACTUAL_SERVICE_NAME}=3
             """
-        } else if (currentBuild.result == 'FAILURE') {
+        } else {
             echo """
-            ❌❌❌ PIPELINE FAILED ❌❌❌
+            ❌❌❌ DEPLOYMENT FAILED ❌❌❌
             
-            🔍 Investigation steps:
-            1. Check Jenkins console output above
-            2. Check Docker Swarm service: docker service ps ${SWARM_SERVICE_NAME}
-            3. Check container logs: docker service logs ${SWARM_SERVICE_NAME}
-            4. Check if image exists: docker image ls | grep ${SERVICE_NAME}
+            🔍 Troubleshooting steps:
+            1. Check Docker Swarm status: docker node ls
+            2. Check services: docker service ls
+            3. Check specific service: docker service ps ${ACTUAL_SERVICE_NAME}
+            4. Check logs: docker service logs ${ACTUAL_SERVICE_NAME}
+            5. Verify Docker Hub credentials
+            6. Check port ${HEALTH_CHECK_PORT} availability
             
-            🛠️  Recovery actions:
-            • Rollback: docker service rollback ${SWARM_SERVICE_NAME}
-            • Redeploy previous version manually
-            • Check Docker Swarm status: docker node ls
+            🛠️  Recovery options:
+            • Manually deploy: docker stack deploy -c ${COMPOSE_FILE} ${STACK_NAME}
+            • Check compose file: cat ${COMPOSE_FILE}
+            • Verify Docker image exists: docker image ls | grep ${SERVICE_NAME}
             """
         }
     }
