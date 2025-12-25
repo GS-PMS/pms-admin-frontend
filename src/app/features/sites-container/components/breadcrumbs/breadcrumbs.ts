@@ -27,11 +27,10 @@ export class Breadcrumbs {
   breadcrumbs = signal<Breadcrumb[]>([this.getRootBreadcrumb()]);
 
   private getRootBreadcrumb(): Breadcrumb {
-    return { id: null, name: this.translate.instant('sites.allSites') };
+    return { id: null, nameEn: 'Root Sites', nameAr: 'المواقع الأساسية' };
   }
 
   constructor() {
-    // Update root breadcrumb when language changes
     this.translate.onLangChange.subscribe(() => {
       const current = this.breadcrumbs();
       if (current.length > 0 && current[0].id === null) {
@@ -65,5 +64,9 @@ export class Breadcrumbs {
     } else {
       this.router.navigate(['/sites']);
     }
+  }
+
+  getBreadcrumbName(crumb: Breadcrumb): string {
+    return this.translate.getCurrentLang() === 'en' ? crumb.nameEn : crumb.nameAr;
   }
 }

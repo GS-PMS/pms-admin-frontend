@@ -1,16 +1,14 @@
 <nav class="breadcrumbs">
   @for (crumb of breadcrumbs(); track crumb.id) {
-    <button
-      type="button"
-      class="breadcrumbs__item"
-      [class.breadcrumbs__item--current]="crumb.id === currentSiteId()"
-      (click)="onBreadcrumbClick(crumb)"
-    >
-      {{ crumb.name }}
-    </button>
-    @if (crumb.id !== currentSiteId()) {
-      <span class="breadcrumbs__separator">/</span>
-    }
-  }
+  <button
+    type="button"
+    class="breadcrumbs__item"
+    [class.breadcrumbs__item--current]="crumb.id === currentSiteId()"
+    (click)="onBreadcrumbClick(crumb)"
+  >
+    {{ getBreadcrumbName(crumb) }}
+  </button>
+  @if (crumb.id !== currentSiteId()) {
+  <span class="breadcrumbs__separator">/</span>
+  } }
 </nav>
-

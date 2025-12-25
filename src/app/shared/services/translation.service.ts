@@ -18,12 +18,12 @@ export class TranslationService {
     const savedLang = localStorage.getItem(this.STORAGE_KEY) as Language;
     const defaultLang: Language = savedLang || 'en';
 
-    this.translate.setDefaultLang('en');
+    this.translate.setFallbackLang('en');
     this.setLanguage(defaultLang);
   }
 
   get currentLang(): Language {
-    return this.translate.currentLang as Language;
+    return this.translate.getCurrentLang() as Language;
   }
 
   setLanguage(lang: Language): void {
@@ -35,6 +35,7 @@ export class TranslationService {
   toggleLanguage(): void {
     const newLang: Language = this.currentLang === 'en' ? 'ar' : 'en';
     this.setLanguage(newLang);
+    console.log(this.currentLang);
   }
 
   private updateDocumentDirection(lang: Language): void {
