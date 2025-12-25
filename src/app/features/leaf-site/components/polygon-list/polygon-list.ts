@@ -107,9 +107,7 @@ export class PolygonList {
       },
       error: (error) => {
         this.isSubmitting.set(false);
-        this.errorMessage.set(
-          error?.error?.message || 'Failed to create polygon. Please try again.'
-        );
+        this.errorMessage.set(error?.error || 'Failed to create polygon. Please try again.');
       },
     });
   }
