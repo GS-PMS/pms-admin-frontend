@@ -1,5 +1,5 @@
 export interface Breadcrumb {
   id: string | null;
-  name: string;
+  nameEn: string;
+  nameAr: string;
 }
-

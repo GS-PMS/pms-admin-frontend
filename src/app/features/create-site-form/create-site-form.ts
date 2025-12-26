@@ -207,8 +207,9 @@ export class CreateSiteForm implements OnInit {
         this.submitSuccess.set(true);
       },
       error: (err) => {
+        console.log(err);
         this.submitting.set(false);
-        this.submitError.set(err?.error?.message || 'Failed to create site. Please try again.');
+        this.submitError.set(err?.error || 'Failed to create site. Please try again.');
         this.submitSuccess.set(false);
       },
     });
