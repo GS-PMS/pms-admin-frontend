@@ -28,6 +28,7 @@ export class PolygonList {
   showAddForm = signal(false);
   isSubmitting = signal(false);
   errorMessage = signal<string | null>(null);
+  successMessage = signal(false);
 
   polygonGroup: FormGroup = this.createPolygonGroup();
 
@@ -72,6 +73,7 @@ export class PolygonList {
   private resetForm(): void {
     this.polygonGroup = this.createPolygonGroup();
     this.errorMessage.set(null);
+    this.successMessage.set(false);
   }
 
   cancelAdd(): void {
@@ -87,6 +89,7 @@ export class PolygonList {
 
     this.isSubmitting.set(true);
     this.errorMessage.set(null);
+    this.successMessage.set(false);
 
     const formValue = this.polygonGroup.value;
     const polygonData: CreatePolygonDto = {
@@ -104,10 +107,12 @@ export class PolygonList {
         this.showAddForm.set(false);
         this.resetForm();
         this.polygonAdded.emit(newPolygon);
+        this.successMessage.set(true);
       },
       error: (error) => {
         this.isSubmitting.set(false);
         this.errorMessage.set(error?.error || 'Failed to create polygon. Please try again.');
+        this.successMessage.set(false);
       },
     });
   }

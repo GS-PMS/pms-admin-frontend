@@ -45,7 +45,8 @@
     "lat": "خط العرض:",
     "lng": "خط الطول:",
     "saving": "جاري الحفظ...",
-    "savePolygon": "حفظ المضلع"
+    "savePolygon": "حفظ المضلع",
+    "addPolygonSuccess": "تم اضافة مضلع جديد"
   },
   "createSiteForm": {
     "title": "إنشاء موقع جديد",
