@@ -5,10 +5,8 @@
     class="breadcrumbs__item"
     [class.breadcrumbs__item--current]="crumb.id === currentSiteId()"
     (click)="onBreadcrumbClick(crumb)"
-  >
-    {{ getBreadcrumbName(crumb) }}
-  </button>
+  >{{ getBreadcrumbName(crumb) }}</button>
   @if (crumb.id !== currentSiteId()) {
   <span class="breadcrumbs__separator">/</span>
-  } }
+  }}
 </nav>

@@ -1,8 +1,10 @@
 <div class="sites-grid">
   <div class="sites-grid__header">
-    <button type="button" class="sites-grid__add-btn" (click)="openCreateForm()">
-      {{ 'sites.addSite' | translate }}
-    </button>
+    <button
+      type="button"
+      class="sites-grid__add-btn"
+      (click)="openCreateForm()"
+      >{{ 'sites.addSite' | translate }}</button>
   </div>
 
   @if (loading()) {
@@ -26,5 +28,5 @@
     [totalItems]="totalItems()"
     (pageChange)="onPageChange($event)"
   />
-  } }
+  }}
 </div>

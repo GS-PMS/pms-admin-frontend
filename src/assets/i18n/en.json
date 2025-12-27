@@ -46,7 +46,7 @@
     "lng": "Lng:",
     "saving": "Saving...",
     "savePolygon": "Save Polygon",
-    "addPolygonSuccess": "Polygon addedd successfully"
+    "addPolygonSuccess": "Polygon added successfully"
   },
   "createSiteForm": {
     "title": "Create New Site",

@@ -10,9 +10,12 @@
   @if (submitSuccess()) {
   <div class="form-alert form-alert--success" id="success-msg">
     {{ 'createSiteForm.successMessage' | translate }}
-    <button type="button" class="btn btn--primary btn--sm" id="nav-btn" (click)="navigateBack()">
-      {{ 'createSiteForm.goToSites' | translate }}
-    </button>
+    <button
+      type="button"
+      class="btn btn--primary btn--sm"
+      id="nav-btn"
+      (click)="navigateBack()"
+      >{{ 'createSiteForm.goToSites' | translate }}</button>
   </div>
   }
 

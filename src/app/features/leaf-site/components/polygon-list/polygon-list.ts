@@ -41,6 +41,7 @@ export class PolygonList {
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.noWhitespaceOnly(),
+          FormValidators.noEdgeWhitespaces(),
         ],
       ],
       coordinates: this.fb.array([]),
