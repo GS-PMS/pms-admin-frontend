@@ -10,9 +10,7 @@
       class="pagination__btn"
       [disabled]="currentPage() === 1"
       (click)="onPageChange(currentPage() - 1)"
-    >
-      {{ 'pagination.previous' | translate }}
-    </button>
+    >{{ 'pagination.previous' | translate }}</button>
 
     <div class="pagination__pages">
       @for (pageNum of pageNumbers(); track pageNum) { @if (pageNum === -1) {
@@ -23,9 +21,7 @@
         class="pagination__btn pagination__btn--page"
         [class.pagination__btn--active]="pageNum === currentPage()"
         (click)="onPageChange(pageNum)"
-      >
-        {{ pageNum }}
-      </button>
+      >{{ pageNum }}</button>
       } }
     </div>
 
@@ -34,8 +30,6 @@
       class="pagination__btn"
       [disabled]="currentPage() === totalPages()"
       (click)="onPageChange(currentPage() + 1)"
-    >
-      {{ 'pagination.next' | translate }}
-    </button>
+    >{{ 'pagination.next' | translate }}</button>
   </div>
 </nav>

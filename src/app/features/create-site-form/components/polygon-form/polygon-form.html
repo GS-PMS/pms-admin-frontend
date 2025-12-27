@@ -9,9 +9,7 @@
       class="polygon-form__btn polygon-form__btn--danger polygon-form__btn--sm"
       (click)="onRemove()"
       [id]="'remove-btn-' + polygonIndex()"
-    >
-      {{ 'common.remove' | translate }}
-    </button>
+    >{{ 'common.remove' | translate }}</button>
     }
   </div>
 
@@ -54,17 +52,13 @@
         class="polygon-form__btn polygon-form__btn--outline polygon-form__btn--sm"
         (click)="addCoordinate()"
         [id]="'point-btn-' + polygonIndex()"
-      >
-        {{ 'polygonForm.addPoint' | translate }}
-      </button>
+      >{{ 'polygonForm.addPoint' | translate }}</button>
     </div>
 
     @if (hasCoordinatesError() && coordinates.errors?.['minlength']) {
     <span class="polygon-form__error">{{ 'polygonForm.errors.minCoordinates' | translate }}</span>
     } @if (hasDuplicateCoordinatesError()) {
-    <span class="polygon-form__error">
-      {{ 'polygonForm.errors.duplicateCoordinates' | translate }}</span
-    >
+    <span class="polygon-form__error">{{ 'polygonForm.errors.duplicateCoordinates' | translate }}</span>
     }
 
     <div class="coordinates__list" formArrayName="coordinates">
