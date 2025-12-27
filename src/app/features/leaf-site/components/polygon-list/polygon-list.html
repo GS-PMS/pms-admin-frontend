@@ -13,9 +13,8 @@
   </div>
 
   @if (successMessage()) {
-  <div class="polygon-list__success-banner" id="polygon-form-success">
-    {{ 'polygonList.addPolygonSuccess' | translate }}
-  </div>
+  <div class="polygon-list__success-banner" id="polygon-form-success"
+  >{{ 'polygonList.addPolygonSuccess' | translate }}</div>
   } @if (showAddForm()) {
   <div class="polygon-list__add-form" id="add-polygon-form-container">
     <form [formGroup]="polygonGroup" (ngSubmit)="submitPolygon()" id="add-polygon-form">
