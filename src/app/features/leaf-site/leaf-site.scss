@@ -2,6 +2,7 @@
   width: 90%;
   max-width: 800px;
   margin: 0 auto;
+  white-space: pre;
 }
 
 .leaf-site {
@@ -57,7 +58,7 @@
     color: var(--text-secondary);
     line-height: 1.4;
   }
-  
+
   &__badge {
     display: inline-block;
     width: fit-content;

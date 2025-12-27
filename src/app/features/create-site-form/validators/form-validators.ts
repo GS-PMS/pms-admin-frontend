@@ -13,6 +13,15 @@ export class FormValidators {
     };
   }
 
+  static noEdgeWhitespaces(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      if (control.value && control.value.trim() !== control.value) {
+        return { edgeWhitespaces: true };
+      }
+      return null;
+    };
+  }
+
   static arabicOnly(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       if (!control.value) return null;

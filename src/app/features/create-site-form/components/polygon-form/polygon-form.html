@@ -35,7 +35,10 @@
       {{ 'polygonForm.errors.nameRequired' | translate }} } @else if
       (polygonGroup().get('name')?.errors?.['minlength'] ||
       polygonGroup().get('name')?.errors?.['maxlength']) {
-      {{ 'polygonForm.errors.nameLength' | translate }} }
+      {{ 'polygonForm.errors.nameLength' | translate }} } @else if
+      (polygonGroup().get('name')?.errors?.['edgeWhitespaces']) {
+      {{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}
+      }
     </span>
     }
   </div>
