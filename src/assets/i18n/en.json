@@ -68,7 +68,7 @@
     "createSite": "Create Site",
     "placeholders": {
       "nameEn": "Enter site name in English",
-      "nameAr": "أدخل اسم الموقع بالعربية",
+      "nameAr": "Enter site name in Arabic",
       "integrationCode": "Enter integration code",
       "pricePerHour": "Enter price per hour",
       "numberOfSlots": "Enter number of parking slots"
@@ -90,7 +90,8 @@
       "slotsInteger": "Must be an integer number.",
       "slotsMin": "Must be at least 1 slot.",
       "slotsMax": "Maximum 10,000 slots allowed.",
-      "polygonRequired": "At least 1 polygon is required for leaf sites."
+      "polygonRequired": "At least 1 polygon is required for leaf sites.",
+      "noEdgeWhitespaces": "Please remove whitespaces at edges"
     }
   },
   "polygonForm": {

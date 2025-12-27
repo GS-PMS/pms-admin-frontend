@@ -30,7 +30,7 @@ export class CreateSiteForm implements OnInit {
   currentPath = '/';
 
   submitting = signal(false);
-  submitError = signal<string | null>(null);
+  submitError = signal<string[] | null>(null);
   submitSuccess = signal(false);
 
   ngOnInit(): void {
@@ -50,6 +50,7 @@ export class CreateSiteForm implements OnInit {
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.englishOnly(),
+          FormValidators.noEdgeWhitespaces(),
         ],
       ],
       nameAr: [
@@ -60,6 +61,7 @@ export class CreateSiteForm implements OnInit {
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.arabicOnly(),
+          FormValidators.noEdgeWhitespaces(),
         ],
       ],
       integrationCode: [
@@ -70,6 +72,7 @@ export class CreateSiteForm implements OnInit {
           Validators.minLength(3),
           Validators.maxLength(100),
           FormValidators.integrationCodeValidator(),
+          FormValidators.noEdgeWhitespaces(),
         ],
       ],
       path: [{ value: this.currentPath, disabled: true }],
@@ -134,6 +137,7 @@ export class CreateSiteForm implements OnInit {
           FormValidators.noWhitespaceOnly(),
           Validators.minLength(3),
           Validators.maxLength(100),
+          FormValidators.noEdgeWhitespaces(),
         ],
       ],
       coordinates: this.fb.array(
@@ -180,10 +184,10 @@ export class CreateSiteForm implements OnInit {
 
     const siteData: CreateSiteDto = {
       name: {
-        en: formValue.nameEn,
-        ar: formValue.nameAr,
+        en: formValue.nameEn.trim(),
+        ar: formValue.nameAr.trim(),
       },
-      path: formValue.path,
+      path: formValue.path.trim(),
       isLeaf: isLeaf,
       integrationCode: formValue.integrationCode,
       parentId: this.parentId,
@@ -193,7 +197,7 @@ export class CreateSiteForm implements OnInit {
       siteData.pricePerHour = Number(formValue.pricePerHour);
       siteData.numberOfSlots = Number(formValue.numberOfSlots);
       siteData.polygons = formValue.polygons.map((p: any) => ({
-        name: p.name,
+        name: p.name.trim(),
         coordinates: p.coordinates.map((c: any) => ({
           latitude: Number(c.latitude),
           longitude: Number(c.longitude),
@@ -207,12 +211,25 @@ export class CreateSiteForm implements OnInit {
         this.submitSuccess.set(true);
       },
       error: (err) => {
-        console.log(err);
         this.submitting.set(false);
-        this.submitError.set(err?.error || 'Failed to create site. Please try again.');
+        let errorMsgs: string[] = this.getErrorMessage(err);
+        this.submitError.set(errorMsgs);
         this.submitSuccess.set(false);
       },
     });
+  }
+
+  private getErrorMessage(err: any): string[] {
+    if (typeof err?.error === 'string') {
+      return [err.error];
+    }
+
+    if (err?.error?.errors) {
+      const validationErrors = err.error.errors;
+      return Object.values(validationErrors);
+    }
+
+    return ['Failed to create site. Please try again.'];
   }
 
   onCancel(): void {

@@ -67,7 +67,7 @@
     "creating": "جاري الإنشاء...",
     "createSite": "إنشاء الموقع",
     "placeholders": {
-      "nameEn": "Enter site name in English",
+      "nameEn": "أدخل اسم الموقع بالانجليزية",
       "nameAr": "أدخل اسم الموقع بالعربية",
       "integrationCode": "أدخل كود التكامل",
       "pricePerHour": "أدخل السعر بالساعة",
@@ -90,7 +90,8 @@
       "slotsInteger": "يجب أن يكون رقماً صحيحاً.",
       "slotsMin": "يجب أن يكون مكان واحد على الأقل.",
       "slotsMax": "الحد الأقصى 10,000 مكان.",
-      "polygonRequired": "مطلوب مضلع واحد على الأقل للمواقع النهائية."
+      "polygonRequired": "مطلوب مضلع واحد على الأقل للمواقع النهائية.",
+      "noEdgeWhitespaces": "يجب ازالة المسافات الفارغة من الأطراف"
     }
   },
   "polygonForm": {
