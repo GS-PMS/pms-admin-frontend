@@ -18,8 +18,9 @@
   <div class="polygon-form__field">
     <label class="polygon-form__label" [for]="'polygonName-' + polygonIndex()"
       >{{ 'polygonForm.polygonName' | translate }}
-      <span class="polygon-form__required">*</span></label
-    >
+      <span class="polygon-form__required">*</span>
+    </label>
+
     <input
       type="text"
       formControlName="name"
@@ -31,14 +32,13 @@
     @if (isFieldInvalid('name')) {
     <span class="polygon-form__error" [id]="'polygonName-error' + polygonIndex()">
       @if (polygonGroup().get('name')?.errors?.['required'] ||
-      polygonGroup().get('name')?.errors?.['whitespaceOnly']) {
-      {{ 'polygonForm.errors.nameRequired' | translate }} } @else if
+      polygonGroup().get('name')?.errors?.['whitespaceOnly'])
+      {{{ 'polygonForm.errors.nameRequired' | translate }}} @else if
       (polygonGroup().get('name')?.errors?.['minlength'] ||
-      polygonGroup().get('name')?.errors?.['maxlength']) {
-      {{ 'polygonForm.errors.nameLength' | translate }} } @else if
-      (polygonGroup().get('name')?.errors?.['edgeWhitespaces']) {
-      {{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}
-      }
+      polygonGroup().get('name')?.errors?.['maxlength'])
+      {{{ 'polygonForm.errors.nameLength' | translate }}} @else if
+      (polygonGroup().get('name')?.errors?.['edgeWhitespaces'])
+      {{{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}}
     </span>
     }
   </div>
@@ -62,9 +62,9 @@
     @if (hasCoordinatesError() && coordinates.errors?.['minlength']) {
     <span class="polygon-form__error">{{ 'polygonForm.errors.minCoordinates' | translate }}</span>
     } @if (hasDuplicateCoordinatesError()) {
-    <span class="polygon-form__error">{{
-      'polygonForm.errors.duplicateCoordinates' | translate
-    }}</span>
+    <span class="polygon-form__error">
+      {{ 'polygonForm.errors.duplicateCoordinates' | translate }}</span
+    >
     }
 
     <div class="coordinates__list" formArrayName="coordinates">
@@ -92,12 +92,12 @@
             class="polygon-form__error polygon-form__error--inline"
             [id]="'polygon-' + polygonIndex() + '-lat-' + cooId + '-error'"
           >
-            @if (coordinates.at(cooId).get('latitude')?.errors?.['required']) {
-            {{ 'polygonForm.errors.latitudeRequired' | translate }} } @else if
-            (coordinates.at(cooId).get('latitude')?.errors?.['latitude']) {
-            {{ 'polygonForm.errors.latitudeInvalid' | translate }} } @else if
-            (coordinates.at(cooId).get('latitude')?.errors?.['maxDecimals']) {
-            {{ 'polygonForm.errors.latitudeDecimals' | translate }} }
+            @if (coordinates.at(cooId).get('latitude')?.errors?.['required'])
+            {{{ 'polygonForm.errors.latitudeRequired' | translate }}} @else if
+            (coordinates.at(cooId).get('latitude')?.errors?.['latitude'])
+            {{{ 'polygonForm.errors.latitudeInvalid' | translate }}} @else if
+            (coordinates.at(cooId).get('latitude')?.errors?.['maxDecimals'])
+            {{{ 'polygonForm.errors.latitudeDecimals' | translate }}}
           </span>
           }
         </div>
@@ -117,12 +117,12 @@
             class="polygon-form__error polygon-form__error--inline"
             [id]="'polygon-' + polygonIndex() + '-lng-' + cooId + '-error'"
           >
-            @if (coordinates.at(cooId).get('longitude')?.errors?.['required']) {
-            {{ 'polygonForm.errors.longitudeRequired' | translate }} } @else if
-            (coordinates.at(cooId).get('longitude')?.errors?.['longitude']) {
-            {{ 'polygonForm.errors.longitudeInvalid' | translate }} } @else if
-            (coordinates.at(cooId).get('longitude')?.errors?.['maxDecimals']) {
-            {{ 'polygonForm.errors.longitudeDecimals' | translate }} }
+            @if (coordinates.at(cooId).get('longitude')?.errors?.['required'])
+            {{{ 'polygonForm.errors.longitudeRequired' | translate }}} @else if
+            (coordinates.at(cooId).get('longitude')?.errors?.['longitude'])
+            {{{ 'polygonForm.errors.longitudeInvalid' | translate }}} @else if
+            (coordinates.at(cooId).get('longitude')?.errors?.['maxDecimals'])
+            {{{ 'polygonForm.errors.longitudeDecimals' | translate }}}
           </span>
           }
         </div>
