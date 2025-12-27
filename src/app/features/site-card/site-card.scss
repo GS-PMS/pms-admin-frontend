@@ -6,6 +6,7 @@
   border: 1px solid var(--border-light);
   transition: all 0.2s;
   cursor: pointer;
+  white-space: pre;
 
   &:hover {
     box-shadow: 0 4px 12px var(--shadow-green-medium);
