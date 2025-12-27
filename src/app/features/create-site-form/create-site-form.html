@@ -36,15 +36,14 @@
           @if (isFieldInvalid('nameEn')) {
           <span class="form-error" id="nameEn-error">
             @if (form.get('nameEn')?.errors?.['required'] ||
-            form.get('nameEn')?.errors?.['whitespaceOnly']) {
-            {{ 'createSiteForm.errors.nameEnRequired' | translate }} } @else if
+            form.get('nameEn')?.errors?.['whitespaceOnly'])
+            {{{ 'createSiteForm.errors.nameEnRequired' | translate }}} @else if
             (form.get('nameEn')?.errors?.['minlength'] || form.get('nameEn')?.errors?.['maxlength'])
-            { {{ 'createSiteForm.errors.nameEnLength' | translate }} } @else if
-            (form.get('nameEn')?.errors?.['englishOnly']) {
-            {{ 'createSiteForm.errors.nameEnEnglishOnly' | translate }} } @else if
-            (form.get('nameEn')?.errors?.['edgeWhitespaces']) {
-            {{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}
-            }
+            {{{ 'createSiteForm.errors.nameEnLength' | translate }}} @else if
+            (form.get('nameEn')?.errors?.['englishOnly'])
+            {{{ 'createSiteForm.errors.nameEnEnglishOnly' | translate }}} @else if
+            (form.get('nameEn')?.errors?.['edgeWhitespaces'])
+            {{{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}}
           </span>
           }
         </div>
@@ -64,15 +63,14 @@
           @if (isFieldInvalid('nameAr')) {
           <span class="form-error" id="nameAr-error">
             @if (form.get('nameAr')?.errors?.['required'] ||
-            form.get('nameAr')?.errors?.['whitespaceOnly']) {
-            {{ 'createSiteForm.errors.nameArRequired' | translate }} } @else if
+            form.get('nameAr')?.errors?.['whitespaceOnly'])
+            {{{ 'createSiteForm.errors.nameArRequired' | translate }}} @else if
             (form.get('nameAr')?.errors?.['minlength'] || form.get('nameAr')?.errors?.['maxlength'])
-            { {{ 'createSiteForm.errors.nameArLength' | translate }} } @else if
-            (form.get('nameAr')?.errors?.['arabicOnly']) {
-            {{ 'createSiteForm.errors.nameArArabicOnly' | translate }} } @else if
-            (form.get('nameAr')?.errors?.['edgeWhitespaces']) {
-            {{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}
-            }
+            {{{ 'createSiteForm.errors.nameArLength' | translate }}} @else if
+            (form.get('nameAr')?.errors?.['arabicOnly'])
+            {{{ 'createSiteForm.errors.nameArArabicOnly' | translate }}} @else if
+            (form.get('nameAr')?.errors?.['edgeWhitespaces'])
+            {{{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}}
           </span>
           }
         </div>
@@ -95,16 +93,15 @@
           @if (isFieldInvalid('integrationCode')) {
           <span class="form-error" id="integrationCode-error">
             @if (form.get('integrationCode')?.errors?.['required'] ||
-            form.get('integrationCode')?.errors?.['whitespaceOnly']) {
-            {{ 'createSiteForm.errors.integrationCodeRequired' | translate }} } @else if
+            form.get('integrationCode')?.errors?.['whitespaceOnly'])
+            {{{ 'createSiteForm.errors.integrationCodeRequired' | translate }}} @else if
             (form.get('integrationCode')?.errors?.['minlength'] ||
-            form.get('integrationCode')?.errors?.['maxlength']) {
-            {{ 'createSiteForm.errors.integrationCodeLength' | translate }} } @else if
-            (form.get('integrationCode')?.errors?.['codeValidation']) {
-            {{ 'createSiteForm.errors.integrationCodeFormat' | translate }} } @else if
-            (form.get('integrationCode')?.errors?.['edgeWhitespaces']) {
-            {{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}
-            }
+            form.get('integrationCode')?.errors?.['maxlength'])
+            {{{ 'createSiteForm.errors.integrationCodeLength' | translate }}} @else if
+            (form.get('integrationCode')?.errors?.['codeValidation'])
+            {{{ 'createSiteForm.errors.integrationCodeFormat' | translate }}} @else if
+            (form.get('integrationCode')?.errors?.['edgeWhitespaces'])
+            {{{ 'createSiteForm.errors.noEdgeWhitespaces' | translate }}}
           </span>
           }
         </div>
@@ -150,12 +147,12 @@
           />
           @if (isFieldInvalid('pricePerHour')) {
           <span class="form-error" id="pricePerHour-error">
-            @if (form.get('pricePerHour')?.errors?.['required']) {
-            {{ 'createSiteForm.errors.priceRequired' | translate }} } @else if
-            (form.get('pricePerHour')?.errors?.['min']) {
-            {{ 'createSiteForm.errors.priceMin' | translate }}
-            <!---->} @else if (form.get('pricePerHour')?.errors?.['maxDecimals']) {
-            {{ 'createSiteForm.errors.priceDecimals' | translate }} }
+            @if (form.get('pricePerHour')?.errors?.['required'])
+            {{{ 'createSiteForm.errors.priceRequired' | translate }}} @else if
+            (form.get('pricePerHour')?.errors?.['min'])
+            {{{ 'createSiteForm.errors.priceMin' | translate }}} @else if
+            (form.get('pricePerHour')?.errors?.['maxDecimals'])
+            {{{ 'createSiteForm.errors.priceDecimals' | translate }}}
           </span>
           }
         </div>
@@ -176,14 +173,14 @@
           />
           @if (isFieldInvalid('numberOfSlots')) {
           <span class="form-error" id="numberOfSlots-error">
-            @if (form.get('numberOfSlots')?.errors?.['required']) {
-            {{ 'createSiteForm.errors.slotsRequired' | translate }} } @else if
-            (form.get('numberOfSlots')?.errors?.['integer']) {
-            {{ 'createSiteForm.errors.slotsInteger' | translate }} } @else if
-            (form.get('numberOfSlots')?.errors?.['min']) {
-            {{ 'createSiteForm.errors.slotsMin' | translate }}
-            <!---->} @else if (form.get('numberOfSlots')?.errors?.['max']) {
-            {{ 'createSiteForm.errors.slotsMax' | translate }} }
+            @if (form.get('numberOfSlots')?.errors?.['required'])
+            {{{ 'createSiteForm.errors.slotsRequired' | translate }}} @else if
+            (form.get('numberOfSlots')?.errors?.['integer'])
+            {{{ 'createSiteForm.errors.slotsInteger' | translate }}} @else if
+            (form.get('numberOfSlots')?.errors?.['min'])
+            {{{ 'createSiteForm.errors.slotsMin' | translate }}} @else if
+            (form.get('numberOfSlots')?.errors?.['max'])
+            {{{ 'createSiteForm.errors.slotsMax' | translate }}}
           </span>
           }
         </div>
@@ -241,8 +238,8 @@
         {{ 'common.cancel' | translate }}
       </button>
       <button type="submit" class="btn btn--primary" [disabled]="submitting()" id="sub-btn">
-        @if (submitting()) { {{ 'createSiteForm.creating' | translate }} } @else {
-        {{ 'createSiteForm.createSite' | translate }} }
+        @if (submitting()) {{{ 'createSiteForm.creating' | translate }}} @else
+        {{{ 'createSiteForm.createSite' | translate }}}
       </button>
     </div>
   </form>
