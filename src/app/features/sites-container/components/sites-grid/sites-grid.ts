@@ -8,6 +8,7 @@ import { Site } from '../../../../shared/models/site';
 import { SiteService } from '../../../../shared/services/site.service';
 import { SiteCard } from '../../../site-card/site-card';
 import { Pagination } from '../pagination/pagination';
+import { TranslateService } from '@ngx-translate/core';
 
 const DEFAULT_PAGE = 1;
 const PAGE_SIZE = 12;
@@ -22,6 +23,7 @@ export class SitesGrid {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private siteService = inject(SiteService);
+  private translate = inject(TranslateService);
 
   parentId = input<string | null>(null);
   currentPath = input<string>('/');
@@ -41,7 +43,7 @@ export class SitesGrid {
   pageSize = PAGE_SIZE;
 
   loading = signal(false);
-  error = signal<string | null>(null);
+  error = signal(false);
   sites = signal<Site[]>([]);
   totalPages = signal(0);
   totalItems = signal(0);
@@ -53,7 +55,7 @@ export class SitesGrid {
       const pageSize = this.pageSize;
 
       this.loading.set(true);
-      this.error.set(null);
+      this.error.set(false);
 
       const subscription = this.siteService.getSites(parentId, page, pageSize).subscribe({
         next: (response) => {
@@ -61,9 +63,10 @@ export class SitesGrid {
           this.totalPages.set(response.pagination.totalPages);
           this.totalItems.set(response.pagination.totalItems);
           this.loading.set(false);
+          this.error.set(false);
         },
         error: () => {
-          this.error.set('Failed to load sites');
+          this.error.set(true);
           this.loading.set(false);
         },
       });

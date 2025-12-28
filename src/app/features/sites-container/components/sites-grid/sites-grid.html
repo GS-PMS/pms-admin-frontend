@@ -1,16 +1,16 @@
 <div class="sites-grid">
   <div class="sites-grid__header">
-    <button
-      type="button"
-      class="sites-grid__add-btn"
-      (click)="openCreateForm()"
-      >{{ 'sites.addSite' | translate }}</button>
+    <button type="button" class="sites-grid__add-btn" (click)="openCreateForm()">
+      {{ 'sites.addSite' | translate }}
+    </button>
   </div>
 
   @if (loading()) {
   <h1 class="sites-grid__status">{{ 'sites.loadingSites' | translate }}</h1>
   } @else if (error()) {
-  <h1 class="sites-grid__status sites-grid__status--error">{{ error() }}</h1>
+  <h1 class="sites-grid__status sites-grid__status--error">
+    {{ 'sites.filedToLoadSites' | translate }}
+  </h1>
   } @else if (!sites().length) {
   <h1 class="sites-grid__status">{{ 'sites.noSitesFound' | translate }}</h1>
   } @else {
