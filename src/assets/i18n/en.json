@@ -22,7 +22,8 @@
     "noSitesFound": "No sites found at this level.",
     "subsites": "subsites",
     "integrationCode": "Integration Code",
-    "parkingArea": "Parking Area"
+    "parkingArea": "Parking Area",
+    "filedToLoadSites": "Failed to load sites"
   },
   "siteCard": {
     "integrationCode": "Integration Code"

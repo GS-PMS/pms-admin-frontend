@@ -22,7 +22,8 @@
     "noSitesFound": "لا توجد مواقع في هذا المستوى.",
     "subsites": "مواقع فرعية",
     "integrationCode": "كود التكامل",
-    "parkingArea": "منطقة ركن"
+    "parkingArea": "منطقة ركن",
+    "filedToLoadSites": "فشل في تحميل المواقع"
   },
   "siteCard": {
     "integrationCode": "كود التكامل"
